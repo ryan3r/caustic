@@ -1,13 +1,15 @@
 version: '3'
 services:
-  spring:
+  caustic:
     build: ./caustic
-    image: ryan3r/caustic-server
+    image: ryan3r/caustic
     ports:
       - "8080:8080"
     env_file: .env
     depends_on:
       - db
+    volumes:
+      - "submissions:/mnt/submissions"
 
   db:
     image: mysql
@@ -17,6 +19,15 @@ services:
     volumes:
       - "db:/var/lib/mysql"
 
+  runner:
+    image: ryan3r/caustic-runner
+    build: ./runners
+    depends_on:
+      - caustic
+    volumes:
+      - "submissions:/mnt/submissions"
+
 volumes:
   db:
+  submissions:
 
