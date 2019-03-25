@@ -1,0 +1,15 @@
+version: '3'
+services:
+  spring:
+    build: ./caustic
+    image: ryan3r/caustic-server
+    ports:
+      - "8080:8080"
+    env_file: .env
+
+  db:
+    image: mysql
+    environment:
+      MYSQL_DATABASE: "caustic"
+    env_file: .env
+
