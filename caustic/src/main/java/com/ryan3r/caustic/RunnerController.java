@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class RunnerController {
-	@RequestMapping(method = RequestMethod.GET, path="/")
+	@RequestMapping(method = RequestMethod.GET, path="/ok")
 	public String slash() {
 		return "OK";
 	}
