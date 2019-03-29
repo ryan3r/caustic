@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Results</title>
+    <style>
+        h1 {
+            text-align: center;
+        }
+        .pre-scrollable {
+            max-height: 340px;
+            overflow-y: scroll;
+            max-width: 50%;
+            margin-left: 25%;
+            margin-right: 25%;
+        }
+        .pln {
+            color: rgba(0, 0, 0, 0.98);
+        }
+        pre.prettyprint {
+            background: #ffffff;
+            color: #516d7b;
+            font-family: Menlo, Consolas, "Bitstream Vera Sans Mono", "DejaVu Sans Mono", Monaco, monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            border: 1px solid #161b1d;
+            padding: 10px;
+            /* border-radius: 3px; */
+        }
+        @media screen {
+            /* string content */
+            .str {
+                color: #568c3b;
+            }
+
+            /* a keyword */
+            .kwd {
+                color: #6b6bb8;
+            }
+
+            /* a comment */
+            .com {
+                color: #5a7b8c;
+            }
+
+            /* a type name */
+            .typ {
+                color: #257fad;
+            }
+
+            /* a literal value */
+            .lit {
+                color: #935c25;
+            }
+
+            /* punctuation */
+            .pun {
+                color: #ebf8ff;
+            }
+
+            /* lisp open bracket */
+            .opn {
+                color: #ebf8ff;
+            }
+
+            /* lisp close bracket */
+            .clo {
+                color: #ebf8ff;
+            }
+
+            /* a markup tag name */
+            .tag {
+                color: #d22d72;
+            }
+
+            /* a markup attribute name */
+            .atn {
+                color: #935c25;
+            }
+
+            /* a markup attribute value */
+            .atv {
+                color: #2d8f6f;
+            }
+
+            /* a declaration */
+            .dec {
+                color: #935c25;
+            }
+
+            /* a variable name */
+            .var {
+                color: #d22d72;
+            }
+
+            /* a function name */
+            .fun {
+                color: #257fad;
+            }
+        }
+        @media print, projection {
+            .str {
+                color: #006600;
+            }
+
+            .kwd {
+                color: #006;
+                font-weight: bold;
+            }
+
+            .com {
+                color: #600;
+                font-style: italic;
+            }
+
+            .typ {
+                color: #404;
+                font-weight: bold;
+            }
+
+            .lit {
+                color: #004444;
+            }
+
+            .pun, .opn, .clo {
+                color: #444400;
+            }
+
+            .tag {
+                color: #006;
+                font-weight: bold;
+            }
+
+            .atn {
+                color: #440044;
+            }
+
+            .atv {
+                color: #006600;
+            }
+        }
+
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">C.A.U.S.T.I.C</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li class="home"><a href="#">Home</a></li>
+            <li class="scoreboard"><a class="active" href="#">Scoreboard</a></li>
+            <li class="about"><a href="#">About</a></li>
+            <li class="news"><a href="#">News and Updates</a></li>
+            <li class="judges"><a href="#">Get to Know the Judges</a></li>
+        </ul>
+    </div>
+</nav>
+<h1><u>Results:</u></h1>
+<br>
+<div class="pre-scrollable"><pre class="prettyprint lang-java"><code>
+package main.java.com.zach.caustic.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+@Controller
+public class CausticController {
+    @GetMapping("/profile")
+    public String profile(Model model,
+                          @RequestParam(value="firstName", required=false, defaultValue="Zach") String firstName,
+                          @RequestParam(value="lastName", required=false, defaultValue="Gorman") String lastName,
+                          @RequestParam(value="email", required=false, defaultValue="zgorman2@iastate.edu") String email,
+                          @RequestParam(value="rank", required=false, defaultValue="") int rank) {
+
+        model.addAttribute("firstName", firstName);
+        model.addAttribute("lastName", lastName);
+        model.addAttribute("email", email);
+        model.addAttribute("rank", rank);
+
+        return "profile";
+    }
+
+    @GetMapping("/results")
+    public String results(Model model, @RequestParam(value="result", required=false, defaultValue="fail") String result) {
+        model.addAttribute("result", result);
+        return "results";
+    }
+}
+</code></pre></div>
+<h3><u>Result:</u></h3>
+<img src="../static/correct.png" alt="correct" style="width:100%">
+<script>
+    jQuery(document).ready(
+        function()
+        {
+            prettyPrint();
+        });
+</script>
+</body>
+</html>
