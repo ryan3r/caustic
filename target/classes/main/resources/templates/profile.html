@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile Page</title>
+    <style>
+        .card {
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+            max-width: 300px;
+            margin: auto;
+            text-align: center;
+            font-family: arial,serif;
+            padding-bottom: 10px
+        }
+
+        body {
+            padding-bottom: 40px;
+        }
+
+        .title {
+            color: grey;
+            font-size: 18px;
+        }
+
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">C.A.U.S.T.I.C</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li class="home"><a href="#">Home</a></li>
+            <li class="scoreboard"><a class="active" href="#">Scoreboard</a></li>
+            <li class="about"><a href="#">About</a></li>
+            <li class="news"><a href="#">News and Updates</a></li>
+            <li class="judges"><a href="#">Get to Know the Judges</a></li>
+        </ul>
+    </div>
+</nav>
+<div class="hero-unit">
+<div class="card">
+    <!--        Actual images not pulled because I'm not getting the database up and running to host images. -->
+    <img src="../static/blankProfPic.png" alt="placeholder picture" style="width:100%">
+    <h1>Zach Gorman</h1>
+    <p class="title">Rank: 4</p>
+    <p>Email: <span><a href="#">goforitmlr@gmail.com</a></span></p>
+</div>
+</div>
+</body>
+</html>
