@@ -13,8 +13,9 @@ RUN chmod +x mvnw && \
 FROM openjdk:8-jre-alpine
 WORKDIR /app
 
+COPY entrypoint.sh .
 COPY --from=build /usr/src/app/target/caustic-*.jar /app/caustic.jar
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "caustic.jar"]
+CMD ["sh", "entrypoint.sh"]
