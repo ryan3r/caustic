@@ -1,7 +1,11 @@
 stages:
-  - SpringTest
+  - test
 
 SpringTest:
+  stage: test
+  tags:
+    - docker
   image: openjdk:13-jdk-alpine
   script:
+    - cd caustic
     - ./mvnw test
