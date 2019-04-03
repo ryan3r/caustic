@@ -3,14 +3,11 @@ stages:
 
 SpringTest:
   stage: test
-  variables:
-    MYSQL_ROOT_PASSWORD: Pa$$word1
-    MYSQL_DATABASE: caustic
-  services: 
-    - mysql
   tags:
     - docker
   image: openjdk:13-jdk-alpine
   script:
     - cd caustic
+    - sed 's/localhost/cs319-105.misc.iastate.edu/' -i src/main/resources/application.properties
+    - sed 's/root/caustic/' -i src/main/resources/application.properties
     - ./mvnw test
