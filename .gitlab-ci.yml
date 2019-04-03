@@ -1,0 +1,7 @@
+stages:
+  - SpringTest
+
+SpringTest:
+  image: openjdk:13-jdk-alpine
+  script:
+    - ./mvnw test
