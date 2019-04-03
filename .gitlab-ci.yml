@@ -3,6 +3,11 @@ stages:
 
 SpringTest:
   stage: test
+  variables:
+    MYSQL_ROOT_PASSWORD: Pa$$word1
+    MYSQL_DATABASE: caustic
+  services: 
+    - mysql
   tags:
     - docker
   image: openjdk:13-jdk-alpine
