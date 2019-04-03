@@ -6,6 +6,10 @@ SpringTest:
   tags:
     - docker
   image: openjdk:13-jdk-alpine
+  artifacts:
+    expire_in: 1 week
+    reports:
+      junit: caustic/target/surefire-reports/*.xml
   script:
     - cd caustic
     - sed 's/localhost/cs319-105.misc.iastate.edu/' -i src/main/resources/application.properties
