@@ -1,5 +1,6 @@
 stages:
   - test
+  - upload
 
 SpringTest:
   stage: test
@@ -35,3 +36,12 @@ RunnerTest:
   only:
     - master
     - /-runner$/
+
+DockerUpload:
+  stage: upload
+  tags:
+    - shell
+  script:
+    - upload-to-docker
+  only:
+    - tags
