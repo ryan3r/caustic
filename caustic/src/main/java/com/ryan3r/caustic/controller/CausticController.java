@@ -1,4 +1,4 @@
-package main.java.com.zach.caustic.controller;
+package main.java.com.ryan3r.caustic.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
