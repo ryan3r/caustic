@@ -39,9 +39,10 @@ RunnerTest:
 
 DockerUpload:
   stage: upload
+  when: manual
   tags:
     - shell
   script:
-    - upload-to-docker
+    - sudo upload-to-docker
   only:
-    - tags
+    - master
