@@ -15,8 +15,8 @@ SpringTest:
     - sed 's/localhost/cs319-105.misc.iastate.edu/' -i src/main/resources/application.properties
     - sed 's/root/caustic/' -i src/main/resources/application.properties
     - ./mvnw test
-  # except:
-    # - /-runner$/
+  except:
+    - /-runner$/
 
 RunnerTest:
   stage: test
@@ -32,6 +32,6 @@ RunnerTest:
   script:
     - cd runner
     - go test -v 2>&1 | tee >(go-junit-report > report.xml)
-  # only:
-    # - master
-    # - /-runner$/
+  only:
+    - master
+    - /-runner$/
