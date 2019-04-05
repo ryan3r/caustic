@@ -11,11 +11,15 @@ SpringTest:
     expire_in: 1 week
     reports:
       junit: caustic/target/surefire-reports/*.xml
+  cache:
+    paths:
+      - caustic/.m2/
+      - caustic/target/
   script:
     - cd caustic
     - sed 's/localhost/cs319-105.misc.iastate.edu/' -i src/main/resources/application.properties
     - sed 's/root/caustic/' -i src/main/resources/application.properties
-    - ./mvnw test
+    - ./mvnw -B test -Dmaven.repo.local=.m2/repository
   except:
     - /-runner$/
 
@@ -24,19 +28,14 @@ RunnerTest:
   tags:
     - docker
   image: ryan3r/caustic-runner
-  artifacts:
-    expire_in: 1 week
-    reports:
-      junit: runner/report.xml
-  before_script:
-    - go get -u github.com/jstemmer/go-junit-report
   script:
     - cp -r runner/runner /go/src
     - cd /go/src/runner
-    - go test -v 2>&1 | tee >(go-junit-report > report.xml)
+    - go test
   only:
     - master
     - /-runner$/
+    - tags
 
 DockerUpload:
   stage: upload
@@ -44,6 +43,6 @@ DockerUpload:
   tags:
     - shell
   script:
-    - sudo upload-to-docker
+    - sudo upload-to-docker $CI_COMMIT_TAG
   only:
-    - master
+    - tags
