@@ -6,19 +6,6 @@
 <body>
 <div class="container">
     <div class="main">
-        <h2>Login</h2>
-        <form id="form_id" method="post" name="myform">
-            <label>User Name :</label>
-            <input type="text" name="username" id="username"/>
-            <label>Password :</label>
-            <input type="password" name="password" id="password"/>
-            <input type="button" value="Login" id="submit" onclick="validate()"/>
-        </form>
-    </div>
-</div>
-
-<div class="container">
-    <div class="main">
         <h2>Create Account</h2>
         <form id="form_id2" method="post" name="myform">
             <label>User Name :</label>
@@ -27,6 +14,11 @@
             <input type="password" name="password" id="password2"/>
             <label>Verify Password :</label>
             <input type="password" name="password" id="pswdVerify"/>
+            <select id = "actType">
+                <option value = "comp">Competitor</option>
+                <option value = "admin">Admin</option>
+            </select>
+
             <input type="button" value="Login" id="submit2" onclick="create()"/>
         </form>
     </div>
