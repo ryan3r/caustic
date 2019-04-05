@@ -16,23 +16,24 @@ SpringTest:
       - /root/.m2
       - target
   script:
-    - cd caustic
-    - sed 's/localhost/cs319-105.misc.iastate.edu/' -i src/main/resources/application.properties
-    - sed 's/root/caustic/' -i src/main/resources/application.properties
-    - ./mvnw test
+    # - cd caustic
+    # - sed 's/localhost/cs319-105.misc.iastate.edu/' -i src/main/resources/application.properties
+    # - sed 's/root/caustic/' -i src/main/resources/application.properties
+    # - ./mvnw test
+    - whoami
 
-RunnerTest:
-  stage: test
-  tags:
-    - docker
-  image: ryan3r/caustic-runner
-  script:
-    - cp -r runner/runner /go/src
-    - cd /go/src/runner
-    - go test
-  only:
-    - master
-    - /-runner$/
+# RunnerTest:
+#   stage: test
+#   tags:
+#     - docker
+#   image: ryan3r/caustic-runner
+#   script:
+#     - cp -r runner/runner /go/src
+#     - cd /go/src/runner
+#     - go test
+#   only:
+#     - master
+#     - /-runner$/
 
 DockerUpload:
   stage: upload
