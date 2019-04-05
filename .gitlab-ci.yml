@@ -13,7 +13,8 @@ SpringTest:
       junit: caustic/target/surefire-reports/*.xml
   cache:
     paths:
-      - /root/.m2/
+      - .m2/
+      - caustic/.m2/
       - caustic/target/
   script:
     - cd caustic
