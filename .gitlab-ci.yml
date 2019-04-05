@@ -23,7 +23,7 @@ RunnerTest:
   stage: test
   tags:
     - docker
-  image: golang
+  image: ryan3r/caustic-runner
   artifacts:
     expire_in: 1 week
     reports:
@@ -31,7 +31,8 @@ RunnerTest:
   before_script:
     - go get -u github.com/jstemmer/go-junit-report
   script:
-    - cd runner
+    - cp -r runner/runner /go/src
+    - cd /go/src/runner
     - go test -v 2>&1 | tee >(go-junit-report > report.xml)
   only:
     - master
