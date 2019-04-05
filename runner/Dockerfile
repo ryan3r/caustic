@@ -1,3 +1,9 @@
+FROM golang AS build
+
+WORKDIR /go/src
+COPY . .
+RUN go build main.go
+
 FROM alpine
 
 RUN apk add --no-cache \
@@ -8,6 +14,6 @@ RUN apk add --no-cache \
 	openjdk8
 
 WORKDIR /app
-COPY . .
+COPY --from=build /go/src/main .
 
-CMD ["/bin/bash", "./runner.sh"]
+CMD ["/app/main"]
