@@ -35,7 +35,7 @@ function create() {
     var act = document.getElementById("actType").value;
     var pswdVer = document.getElementById("pswdVerify").value;
     let letNum = new RegExp("^[0-9a-zA-Z]+$");
-    const URL = 'localhost:8080/accounts';
+    const URL = '/accounts';
 
     if (usrname.length < 16 && letNum.test(usrname) && pssword.length > 5 && letNum.test(pssword)) {
         alert("Account Created");
