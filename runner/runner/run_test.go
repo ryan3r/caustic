@@ -2,6 +2,8 @@ package runner
 
 import (
 	"testing"
+	"context"
+	"os"
 )
 
 func TestCanDetectFileType(t *testing.T) {
@@ -15,6 +17,8 @@ func TestCanDetectFileType(t *testing.T) {
 }
 
 func TestCanCompileJava(t *testing.T) {
+	os.Chdir("test-files")
+
 	if err := compile("ok.java"); err != nil {
 		t.Errorf("ok.java failed to compile (should have): %v", err)
 	}
@@ -27,10 +31,10 @@ func TestCompileCanHandleErrors(t *testing.T) {
 }
 
 func TestRunCanGetOutput(t *testing.T) {
-	errors := make(chan error)
-	output := make(chan string)
+	errors := make(chan error, 1)
+	output := make(chan string, 1)
 
-	run("ok.java", output, errors)
+	go run(context.Background(), "ok.java", output, errors)
 
 	select {
 	case <- output:
@@ -40,10 +44,10 @@ func TestRunCanGetOutput(t *testing.T) {
 }
 
 func TestRunCanHandleErrors(t *testing.T) {
-	errors := make(chan error)
-	output := make(chan string)
+	errors := make(chan error, 1)
+	output := make(chan string, 1)
 
-	run("invalid.java", output, errors)
+	go run(context.Background(), "invalid.java", output, errors)
 
 	select {
 	case <- output:
@@ -53,31 +57,31 @@ func TestRunCanHandleErrors(t *testing.T) {
 }
 
 func TestCanTestValidPrograms(t *testing.T) {
-	if result := Test("ok.java"); result != "ok" {
+	if result := Test("ok.java", "1 2 3"); result != "ok" {
 		t.Errorf("Expected result ok but got %v", result)
 	}
 }
 
 func TestCanTestIncorrectPrograms(t *testing.T) {
-	if result := Test("fail.java"); result != "wrong" {
+	if result := Test("fail.java", "1 2 3"); result != "wrong" {
 		t.Errorf("Expected result wrong but got %v", result)
 	}
 }
 
 func TestCanHandleRuntimeErrors(t *testing.T) {
-	if result := Test("crash.java"); result != "exception" {
+	if result := Test("crash.java", "1 2 3"); result != "exception" {
 		t.Errorf("Expected result exception but got %v", result)
 	}
 }
 
 func TestCanTestInValidPrograms(t *testing.T) {
-	if result := Test("error.java"); result != "compile-error" {
+	if result := Test("error.java", "1 2 3"); result != "compile-error" {
 		t.Errorf("Expected result compile-error but got %v", result)
 	}
 }
 
 func TestCanHandleInfiniteLoops(t *testing.T) {
-	if result := Test("tle.java"); result != "time-limit" {
+	if result := Test("tle.java", "1 2 3"); result != "time-limit" {
 		t.Errorf("Expected result time-limit but got %v", result)
 	}
 }
