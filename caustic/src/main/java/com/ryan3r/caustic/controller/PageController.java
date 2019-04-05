@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
-public class CausticController {
+public class PageController {
     @GetMapping("/profile")
     public String profile(Model model,
                           @RequestParam(value="firstName", required=false, defaultValue="Zach") String firstName,
@@ -26,5 +26,10 @@ public class CausticController {
     public String results(Model model, @RequestParam(value="result", required=false, defaultValue="fail") String result) {
         model.addAttribute("result", result);
         return "results";
+    }
+
+    @GetMapping("/scoreboard")
+    public String scoreboard(Model model){
+        return "scoreboard";
     }
 }
