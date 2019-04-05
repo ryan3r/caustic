@@ -28,7 +28,7 @@ func TestCompileCanHandleErrors(t *testing.T) {
 
 func TestRunCanGetOutput(t *testing.T) {
 	errors := make(chan error)
-	output := make(chan []byte)
+	output := make(chan string)
 
 	run("ok.java", output, errors)
 
@@ -41,7 +41,7 @@ func TestRunCanGetOutput(t *testing.T) {
 
 func TestRunCanHandleErrors(t *testing.T) {
 	errors := make(chan error)
-	output := make(chan []byte)
+	output := make(chan string)
 
 	run("invalid.java", output, errors)
 
@@ -49,5 +49,35 @@ func TestRunCanHandleErrors(t *testing.T) {
 	case <- output:
 		t.Errorf("No errors occured while running (expected one)")
 	case <- errors:
+	}
+}
+
+func TestCanTestValidPrograms(t *testing.T) {
+	if result := Test("ok.java"); result != "ok" {
+		t.Errorf("Expected result ok but got %v", result)
+	}
+}
+
+func TestCanTestIncorrectPrograms(t *testing.T) {
+	if result := Test("fail.java"); result != "wrong" {
+		t.Errorf("Expected result wrong but got %v", result)
+	}
+}
+
+func TestCanHandleRuntimeErrors(t *testing.T) {
+	if result := Test("crash.java"); result != "exception" {
+		t.Errorf("Expected result exception but got %v", result)
+	}
+}
+
+func TestCanTestInValidPrograms(t *testing.T) {
+	if result := Test("error.java"); result != "compile-error" {
+		t.Errorf("Expected result compile-error but got %v", result)
+	}
+}
+
+func TestCanHandleInfiniteLoops(t *testing.T) {
+	if result := Test("tle.java"); result != "time-limit" {
+		t.Errorf("Expected result time-limit but got %v", result)
 	}
 }
