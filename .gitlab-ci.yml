@@ -11,13 +11,15 @@ SpringTest:
     expire_in: 1 week
     reports:
       junit: caustic/target/surefire-reports/*.xml
+  cache:
+    paths:
+      - /root/.m2
+      - target
   script:
     - cd caustic
     - sed 's/localhost/cs319-105.misc.iastate.edu/' -i src/main/resources/application.properties
     - sed 's/root/caustic/' -i src/main/resources/application.properties
     - ./mvnw test
-  except:
-    - /-runner$/
 
 RunnerTest:
   stage: test
