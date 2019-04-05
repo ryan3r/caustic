@@ -21,7 +21,7 @@ services:
 
   runner:
     image: ryan3r/caustic-runner
-    build: ./runners
+    build: ./runner
     depends_on:
       - caustic
     volumes:
