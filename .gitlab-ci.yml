@@ -29,6 +29,7 @@ RunnerTest:
     reports:
       junit: /go/src/runner/report.xml
   before_script:
+    - apk add --no-cache git
     - go get -u github.com/jstemmer/go-junit-report
   script:
     - cp -r runner/runner /go/src
