@@ -1,4 +1,4 @@
-package main.java.com.ryan3r.caustic.controller;
+package com.ryan3r.caustic.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -7,6 +7,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class PageController {
+
+//    @GetMapping(path="/")
+//    public String index(Model model){
+//        return "index";
+//    }
+
     @GetMapping("/profile")
     public String profile(Model model,
                           @RequestParam(value="firstName", required=false, defaultValue="Zach") String firstName,
