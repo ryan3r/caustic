@@ -27,7 +27,7 @@ RunnerTest:
   artifacts:
     expire_in: 1 week
     reports:
-      junit: runner/report.xml
+      junit: /go/src/runner/report.xml
   before_script:
     - go get -u github.com/jstemmer/go-junit-report
   script:
