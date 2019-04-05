@@ -11,7 +11,8 @@ RUN apk add --no-cache \
 	curl \
 	gcc \
 	g++ \
-	openjdk8
+	openjdk8 \
+	python
 
 WORKDIR /app
 ENV PATH="$PATH:/usr/lib/jvm/java-1.8-openjdk/bin/"

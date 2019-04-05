@@ -5,6 +5,7 @@ import (
 	"strings"
 	"context"
 	"time"
+	"errors"
 )
 
 func detectType(filename string) (string, string) {
@@ -13,15 +14,40 @@ func detectType(filename string) (string, string) {
 }
 
 func compile(filename string) error {
-	return exec.Command("javac", filename).Run()
+	compiler := "javac"
+	_, ft := detectType(filename)
+
+	if ft == "py" {
+		return nil
+	}
+	
+	if ft == "cpp" {
+		compiler = "g++"
+	}
+
+	return exec.Command(compiler, filename).Run()
 }
 
-func run(ctx context.Context, filename string, output chan string, errors chan error) {
-	name, _ := detectType(filename)
-	out, err := exec.CommandContext(ctx, "java", name).CombinedOutput()
+func run(ctx context.Context, filename string, output chan string, errs chan error) {
+	name, ft := detectType(filename)
+	var cmd *exec.Cmd;
+
+	switch ft {
+	case "java":
+		cmd = exec.CommandContext(ctx, "java", name)
+	case "cpp":
+		cmd = exec.CommandContext(ctx, "./a.out")
+	case "py":
+		cmd = exec.CommandContext(ctx, "python", filename)
+	default:
+		errs <- errors.New("Unknown filetype")
+		return
+	}
+
+	out, err := cmd.CombinedOutput()
 
 	if err != nil {
-		errors <- err
+		errs <- err
 	} else {
 		output <- string(out)
 	}

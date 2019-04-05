@@ -85,3 +85,15 @@ func TestCanHandleInfiniteLoops(t *testing.T) {
 		t.Errorf("Expected result time-limit but got %v", result)
 	}
 }
+
+func TestCanHandleCpp(t *testing.T) {
+	if result := Test("ok.cpp", "1 2 3"); result != "ok" {
+		t.Errorf("Expected result ok but got %v", result)
+	}
+}
+
+func TestCanHandlePython(t *testing.T) {
+	if result := Test("ok.py", "1 2 3"); result != "ok" {
+		t.Errorf("Expected result ok but got %v", result)
+	}
+}
