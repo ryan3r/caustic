@@ -20,19 +20,22 @@ SpringTest:
     - sed 's/localhost/cs319-105.misc.iastate.edu/' -i src/main/resources/application.properties
     - sed 's/root/caustic/' -i src/main/resources/application.properties
     - ./mvnw -B test -Dmaven.repo.local=.m2/repository
+  except:
+    - /-runner$/
 
-# RunnerTest:
-#   stage: test
-#   tags:
-#     - docker
-#   image: ryan3r/caustic-runner
-#   script:
-#     - cp -r runner/runner /go/src
-#     - cd /go/src/runner
-#     - go test
-#   only:
-#     - master
-#     - /-runner$/
+RunnerTest:
+  stage: test
+  tags:
+    - docker
+  image: ryan3r/caustic-runner
+  script:
+    - cp -r runner/runner /go/src
+    - cd /go/src/runner
+    - go test
+  only:
+    - master
+    - /-runner$/
+    - tags
 
 DockerUpload:
   stage: upload
@@ -40,6 +43,6 @@ DockerUpload:
   tags:
     - shell
   script:
-    - sudo upload-to-docker
+    - sudo upload-to-docker $CI_COMMIT_TAG
   only:
-    - master
+    - tags
