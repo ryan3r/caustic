@@ -13,14 +13,13 @@ SpringTest:
       junit: caustic/target/surefire-reports/*.xml
   cache:
     paths:
-      - .m2/
       - caustic/.m2/
       - caustic/target/
   script:
     - cd caustic
     - sed 's/localhost/cs319-105.misc.iastate.edu/' -i src/main/resources/application.properties
     - sed 's/root/caustic/' -i src/main/resources/application.properties
-    - ./mvnw test
+    - ./mvnw -B test -Dmaven.repo.local=.m2/repository
 
 # RunnerTest:
 #   stage: test
