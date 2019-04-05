@@ -8,11 +8,13 @@ import (
 	"errors"
 )
 
+// Detect the filetype and name of file
 func detectType(filename string) (string, string) {
 	idx := strings.LastIndex(filename, ".")
 	return filename[:idx], filename[idx+1:]
 }
 
+// Compile a file
 func compile(filename string) error {
 	compiler := "javac"
 	_, ft := detectType(filename)
@@ -28,6 +30,7 @@ func compile(filename string) error {
 	return exec.Command(compiler, filename).Run()
 }
 
+// Run a program
 func run(ctx context.Context, filename string, output chan string, errs chan error) {
 	name, ft := detectType(filename)
 	var cmd *exec.Cmd;
@@ -53,6 +56,7 @@ func run(ctx context.Context, filename string, output chan string, errs chan err
 	}
 }
 
+// Compile, run and check a program
 func Test(filename string, expected string) string {
 	if err := compile(filename); err != nil {
 		return "compile-error"
