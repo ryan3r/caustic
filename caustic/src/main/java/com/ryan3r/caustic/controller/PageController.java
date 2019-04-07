@@ -1,9 +1,13 @@
 package com.ryan3r.caustic.controller;
 
+import com.ryan3r.caustic.model.Scoreboard;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 public class PageController {
@@ -25,17 +29,20 @@ public class PageController {
         model.addAttribute("email", email);
         model.addAttribute("rank", rank);
 
-        return "profile";
+        return "profile.html";
     }
 
     @GetMapping("/results")
     public String results(Model model, @RequestParam(value="result", required=false, defaultValue="fail") String result) {
         model.addAttribute("result", result);
-        return "results";
+        return "results.html";
     }
+
+    List<Scoreboard> scoreList = new ArrayList<>();
 
     @GetMapping("/scoreboard")
     public String scoreboard(Model model){
-        return "scoreboard";
+        model.addAttribute("scores", scoreList);
+        return "scoreboard.html";
     }
 }

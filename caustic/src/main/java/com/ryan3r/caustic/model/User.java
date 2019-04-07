@@ -1,4 +1,4 @@
-package main.java.com.ryan3r.caustic.model;
+package com.ryan3r.caustic.model;
 
 public class User {
 

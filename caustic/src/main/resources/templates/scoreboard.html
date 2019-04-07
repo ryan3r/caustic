@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"><head>
     <meta charset="UTF-8">
     <title>Scoreboard</title>
@@ -48,40 +48,12 @@
         </tr>
     </thead>
     <tbody>
-        <tr>
-            <th scope="row">1</th>
-            <td>Team 3</td>
-            <td><img src="../static/correct.png" alt="correct"></td>
-            <td>437</td>
-            <td>34 of 34</td>
-        </tr>
-        <tr>
-            <th scope="row">2</th>
-            <td>Team 4</td>
-            <td><img src="../static/correct.png" alt="correct"></td>
-            <td>683</td>
-            <td>25 of 34</td>
-        </tr>
-        <tr>
-            <th scope="row">3</th>
-            <td>Team 1</td>
-            <td><img src="../static/correct.png" alt="correct"></td>
-            <td>722</td>
-            <td>24 of 34</td>
-        </tr>
-        <tr>
-            <th scope="row">4</th>
-            <td>Team 5</td>
-            <td><img src="../static/correct.png" alt="correct"></td>
-            <td>704</td>
-            <td>12 of 34</td>
-        </tr>
-        <tr>
-            <th scope="row">5</th>
-            <td>Team 2</td>
-            <td><img src="../static/wrong.png" alt="wrong"></td>
-            <td>1534</td>
-            <td>0 of 34</td>
+        <tr th:each="scoreboard, rowStat: ${scores}">
+            <td th:text="${scoreboard.rank}"></td>
+            <td th:text="${scoreboard.teamName}"></td>
+            <td th:text="${scoreboard.solved}"></td>
+            <td th:text="${scoreboard.timeToSolve}"></td>
+            <td th:text="${scoreboard.score}"></td>
         </tr>
     </tbody>
 </table>
