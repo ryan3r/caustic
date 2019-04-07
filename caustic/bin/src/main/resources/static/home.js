@@ -5,7 +5,6 @@ function validate() {
     var pssword = document.getElementById("password").value;
     let letNum = new RegExp("^[0-9a-zA-Z]+$");
     var login = false;
-    const URL = 'localhost:8080';
     if (usrname.length < 16 && letNum.test(usrname) && pssword.length > 5 && letNum.test(pssword)) {
         var obj = {username: usrname, password: pssword};
         var jsonData = JSON.stringify(obj);
@@ -35,7 +34,7 @@ function create() {
     var act = document.getElementById("actType").value;
     var pswdVer = document.getElementById("pswdVerify").value;
     let letNum = new RegExp("^[0-9a-zA-Z]+$");
-    const URL = '/accounts';
+    const URL = 'localhost';
 
     if (usrname.length < 16 && letNum.test(usrname) && pssword.length > 5 && letNum.test(pssword)) {
         alert("Account Created");
