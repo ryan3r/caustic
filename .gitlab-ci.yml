@@ -39,7 +39,6 @@ RunnerTest:
 
 DockerUpload:
   stage: upload
-  when: manual
   tags:
     - shell
   script:
