@@ -1,9 +1,6 @@
 FROM openjdk:13-jdk-alpine AS build
 
 WORKDIR /usr/src/app
-COPY .mvn .mvn
-COPY pom.xml mvnw ./
-RUN chmod +x mvnw && ./mvnw compile
 COPY . .
 RUN chmod +x mvnw && \
 	sed -i 's/localhost/db/g' src/main/resources/application.properties && \

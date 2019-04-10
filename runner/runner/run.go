@@ -65,8 +65,9 @@ func Test(filename string, expected string) string {
 	errors := make(chan error, 1)
 	output := make(chan string, 1)
 
-	ctx, _ := context.WithTimeout(context.Background(), 2 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2 * time.Second)
 	run(ctx, filename, output, errors)
+	cancel()
 
 	select {
 	case out := <- output: // process exited on time w/o errors
