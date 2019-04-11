@@ -40,8 +40,7 @@ function create() {
     if (usrname.length < 16 && letNum.test(usrname) && pssword.length > 5 && letNum.test(pssword)) {
         alert("Account Created");
         var obj = { username: usrname, password: pssword, accType: acc};
-        var jsonData = JSON.stringify(obj);
-        $.post(URL, jsonData, function(data, status){console.log(`${data} and status is ${status}`)});
+        $.post(URL, { json_string:JSON.stringify(obj) });
         window.location = "formUpload.html";
         return false;
     } else {
