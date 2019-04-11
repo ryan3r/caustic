@@ -32,7 +32,7 @@ function validate() {
 function create() {
     var usrname = document.getElementById("username2").value;
     var pssword = document.getElementById("password2").value;
-    var acc = document.getElementById("accType").value;
+    var acc = document.getElementById("actType").value;
     var pswdVer = document.getElementById("pswdVerify").value;
     let letNum = new RegExp("^[0-9a-zA-Z]+$");
     const URL = '/accounts';
