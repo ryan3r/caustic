@@ -42,7 +42,7 @@ function create() {
         var obj = { username: usrname, password: pssword, accType: acc};
         var jsonData = JSON.stringify(obj);
         var xmlhttp = new XMLHttpRequest();
-        xmlhttp.open("POST", URL, async);
+        xmlhttp.open("POST", URL, true);
         xmlhttp.setRequestHeader("Content-Type", "application/json");
         xmlhttp.send(jsonData);
         window.location = "formUpload.html";
