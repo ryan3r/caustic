@@ -40,7 +40,11 @@ function create() {
     if (usrname.length < 16 && letNum.test(usrname) && pssword.length > 5 && letNum.test(pssword)) {
         alert("Account Created");
         var obj = { username: usrname, password: pssword, accType: acc};
-        $.post(URL, { json_string:JSON.stringify(obj) });
+        var jsonData = JSON.stringify(obj);
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("POST", URL, async);
+        xmlhttp.setRequestHeader("Content-Type", "application/json");
+        xmlhttp.send(jsonData);
         window.location = "formUpload.html";
         return false;
     } else {
