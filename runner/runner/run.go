@@ -80,14 +80,12 @@ func Test(filename string, expected string) string {
 	case out := <-output: // process exited on time w/o errors
 		if strings.Trim(out, "\r\n\t ") == expected {
 			return "ok"
-		} else {
-			return "wrong"
 		}
+		return "wrong"
 	case err := <-errors: // process crashed or was killed
 		if err.Error() == "signal: killed" {
 			return "time-limit"
-		} else {
-			return "exception"
 		}
+		return "exception"
 	}
 }
