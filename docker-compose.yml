@@ -24,10 +24,14 @@ services:
   runner:
     image: ryan3r/caustic-runner
     build: ./runner
+    env_file: .env
     depends_on:
       - caustic
+    # volumes:
+    #   - "submissions:/mnt/submissions"
+    # Temporary config until we can upload files
     volumes:
-      - "submissions:/mnt/submissions"
+      - "./runner/runner/test-files:/mnt/submissions"
 
 volumes:
   db:

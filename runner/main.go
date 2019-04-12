@@ -15,7 +15,7 @@ func main() {
 	flag.Parse()
 	os.Chdir("/mnt/submissions")
 
-	db, err := sql.Open("mysql", "root:password@tcp(db)/caustic")
+	db, err := sql.Open("mysql", "root:"+os.Getenv("MYSQL_ROOT_PASSWORD")+"@tcp(db)/caustic")
 	if err != nil {
 		panic(err)
 	}
