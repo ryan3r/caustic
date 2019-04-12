@@ -2,7 +2,8 @@ FROM golang:1.12-alpine AS build
 
 WORKDIR /go/src
 RUN apk add --no-cache git && \
-	go get github.com/golang/glog
+	go get github.com/golang/glog && \
+	go get github.com/go-sql-driver/mysql
 COPY . .
 RUN go build main.go
 

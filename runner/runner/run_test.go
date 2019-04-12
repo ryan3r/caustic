@@ -1,9 +1,9 @@
 package runner
 
 import (
-	"testing"
 	"context"
 	"os"
+	"testing"
 )
 
 func TestCanDetectFileType(t *testing.T) {
@@ -37,8 +37,8 @@ func TestRunCanGetOutput(t *testing.T) {
 	go run(context.Background(), "ok.java", output, errors)
 
 	select {
-	case <- output:
-	case err := <- errors:
+	case <-output:
+	case err := <-errors:
 		t.Errorf("An error occured while running %v", err)
 	}
 }
@@ -50,50 +50,50 @@ func TestRunCanHandleErrors(t *testing.T) {
 	go run(context.Background(), "invalid.java", output, errors)
 
 	select {
-	case <- output:
+	case <-output:
 		t.Errorf("No errors occured while running (expected one)")
-	case <- errors:
+	case <-errors:
 	}
 }
 
 func TestCanTestValidPrograms(t *testing.T) {
-	if result := Test("ok.java", "1 2 3"); result != "ok" {
+	if result := Test("ok.java", "1 2 3"); result != Ok {
 		t.Errorf("Expected result ok but got %v", result)
 	}
 }
 
 func TestCanTestIncorrectPrograms(t *testing.T) {
-	if result := Test("fail.java", "1 2 3"); result != "wrong" {
+	if result := Test("fail.java", "1 2 3"); result != Wrong {
 		t.Errorf("Expected result wrong but got %v", result)
 	}
 }
 
 func TestCanHandleRuntimeErrors(t *testing.T) {
-	if result := Test("crash.java", "1 2 3"); result != "exception" {
+	if result := Test("crash.java", "1 2 3"); result != Exception {
 		t.Errorf("Expected result exception but got %v", result)
 	}
 }
 
 func TestCanTestInValidPrograms(t *testing.T) {
-	if result := Test("error.java", "1 2 3"); result != "compile-error" {
+	if result := Test("error.java", "1 2 3"); result != CompileError {
 		t.Errorf("Expected result compile-error but got %v", result)
 	}
 }
 
 func TestCanHandleInfiniteLoops(t *testing.T) {
-	if result := Test("tle.java", "1 2 3"); result != "time-limit" {
+	if result := Test("tle.java", "1 2 3"); result != TimeLimit {
 		t.Errorf("Expected result time-limit but got %v", result)
 	}
 }
 
 func TestCanHandleCpp(t *testing.T) {
-	if result := Test("ok.cpp", "1 2 3"); result != "ok" {
+	if result := Test("ok.cpp", "1 2 3"); result != Ok {
 		t.Errorf("Expected result ok but got %v", result)
 	}
 }
 
 func TestCanHandlePython(t *testing.T) {
-	if result := Test("ok.py", "1 2 3"); result != "ok" {
+	if result := Test("ok.py", "1 2 3"); result != Ok {
 		t.Errorf("Expected result ok but got %v", result)
 	}
 }

@@ -64,9 +64,9 @@ func run(ctx context.Context, filename string, output chan string, errs chan err
 }
 
 // Test will compile, run and check a program
-func Test(filename string, expected string) string {
+func Test(filename string, expected string) SubmissionStatus {
 	if err := compile(filename); err != nil {
-		return "compile-error"
+		return CompileError
 	}
 
 	errors := make(chan error, 1)
@@ -79,13 +79,13 @@ func Test(filename string, expected string) string {
 	select {
 	case out := <-output: // process exited on time w/o errors
 		if strings.Trim(out, "\r\n\t ") == expected {
-			return "ok"
+			return Ok
 		}
-		return "wrong"
+		return Wrong
 	case err := <-errors: // process crashed or was killed
 		if err.Error() == "signal: killed" {
-			return "time-limit"
+			return TimeLimit
 		}
-		return "exception"
+		return Exception
 	}
 }

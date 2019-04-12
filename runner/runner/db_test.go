@@ -52,7 +52,7 @@ func TestClaimUpdatesStatus(t *testing.T) {
 		AddRow(2, "new", "foo.java")
 
 	mock.ExpectQuery("^SELECT (.+) FROM submission").WillReturnRows(rows)
-	mock.ExpectExec("UPDATE submission").WithArgs(2, "running")
+	mock.ExpectExec("UPDATE submission").WithArgs(Running, 2)
 
 	ClaimSubmission(db)
 
@@ -68,14 +68,14 @@ func TestUpdateStatusWithResult(t *testing.T) {
 	}
 	defer db.Close()
 
-	mock.ExpectExec("UPDATE submission").WithArgs(1, "exception")
+	mock.ExpectExec("UPDATE submission").WithArgs(1, Exception)
 
 	submission := &Submission{
 		ID: 1,
 		db: db,
 	}
 
-	submission.UpdateStatus("exception")
+	submission.UpdateStatus(Exception)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("Expectations not met: %s", err)
