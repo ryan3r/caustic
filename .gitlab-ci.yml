@@ -7,10 +7,6 @@ SpringTest:
   tags:
     - docker
   image: openjdk:13-jdk-alpine
-  artifacts:
-    expire_in: 1 week
-    reports:
-      junit: caustic/target/surefire-reports/*.xml
   cache:
     paths:
       - caustic/.m2/
@@ -30,17 +26,10 @@ RunnerTest:
     - apk add --no-cache git
     - go get github.com/golang/glog
     - go get github.com/DATA-DOG/go-sqlmock
-    - go get -u github.com/jstemmer/go-junit-report
   script:
     - cp -r runner/runner /go/src
     - pushd /go/src/runner
-    - go test -v 2>&1 | tee >(go-junit-report > report.xml)
-    - popd
-    - cp /go/src/runner/report.xml .
-  artifacts:
-    expire_in: 1 week
-    reports:
-      junit: report.xml
+    - go test -cover
 
 DockerUpload:
   stage: upload
