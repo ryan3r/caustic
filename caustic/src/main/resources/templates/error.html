@@ -2,32 +2,9 @@
 <html lang="en"  xmlns:th="http://www.thymeleaf.org">
 
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <head>
     <meta charset="UTF-8">
-    <title>Profile Page</title>
-    <style>
-        .card {
-            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-            max-width: 300px;
-            margin: auto;
-            text-align: center;
-            font-family: arial,serif;
-            padding-bottom: 10px
-        }
-
-        body {
-            padding-bottom: 40px;
-        }
-
-        .title {
-            color: grey;
-            font-size: 18px;
-        }
-        h1 {
-            padding-top: 5px;
-        }
-    </style>
+    <title>Error</title>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -49,17 +26,16 @@
     </div>
 </nav>
 <br>
-<div class="hero-unit">
-<div class="card">
-    <!--    Are we doing profile pictures?... -->
-    <img src="/blankProfPic.png" alt="placeholder picture" style="width:100%">
-    <!--    <h1><span th:text="${User.name}"></span></h1>-->
-    <h1>Zach Gorman</h1>
-    <!--    <p class="title"><span th:text="${User.rank}"></span></p>-->
-    <p class="title">Rank: 4</p>
-    <!--    <p>Email: <span th:text="${User.email}"></span></p>-->
-    <p>Email: <span><a href="#">goforitmlr@gmail.com</a></span></p>
-</div>
+
+<div class="container">
+    <h1>Error Occurred!</h1>
+    <div class="alert alert-danger" role="alert">
+        <b>
+            [<span th:text="${status}">status</span>]
+            <span th:text="${error}">error</span>
+        </b>
+        <p th:text="${message}">message</p>
+    </div>
 </div>
 </body>
 </html>

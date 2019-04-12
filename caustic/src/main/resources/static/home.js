@@ -32,16 +32,19 @@ function validate() {
 function create() {
     var usrname = document.getElementById("username2").value;
     var pssword = document.getElementById("password2").value;
-    var act = document.getElementById("actType").value;
+    var acc = document.getElementById("actType").value;
     var pswdVer = document.getElementById("pswdVerify").value;
     let letNum = new RegExp("^[0-9a-zA-Z]+$");
     const URL = '/accounts';
 
     if (usrname.length < 16 && letNum.test(usrname) && pssword.length > 5 && letNum.test(pssword)) {
         alert("Account Created");
-        var obj = { username: usrname, password: pssword, actType: act};
+        var obj = { username: usrname, password: pssword, accType: acc};
         var jsonData = JSON.stringify(obj);
-        $.post(URL, jsonData, function(data, status){console.log(`${data} and status is ${status}`)});
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("POST", URL, true);
+        xmlhttp.setRequestHeader("Content-Type", "application/json");
+        xmlhttp.send(jsonData);
         window.location = "formUpload.html";
         return false;
     } else {
