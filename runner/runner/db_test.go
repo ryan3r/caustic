@@ -14,33 +14,15 @@ func TestCanLoadCode(t *testing.T) {
 	defer db.Close()
 
 	rows := sqlmock.NewRows([]string{"submissionId", "status", "fileName"}).
-		AddRow(1, "new", "foo.java").
-		AddRow(2, "new", "bar.java")
+		AddRow(1, "new", "foo.java")
 
-	mock.ExpectQuery("^SELECT (.+) FROM submissions$").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT (.+) FROM submission").
+		WillReturnRows(rows)
 
-	submission := getNextSubmission(db)
+	submission, _ := getNextSubmission(db)
 
 	if submission.ID != 1 {
-		t.Errorf("Picked the wrong submission (%v)", submission.ID)
-	}
-}
-
-func TestOnlyLoadsNew(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Error setting up mock: %s", err)
-	}
-	defer db.Close()
-
-	rows := sqlmock.NewRows([]string{"submissionId", "status", "fileName"}).
-		AddRow(1, "running", "foo.java").
-		AddRow(2, "new", "bar.java")
-
-	mock.ExpectQuery("^SELECT (.+) FROM submissions$").WillReturnRows(rows)
-
-	if submission := getNextSubmission(db); submission.ID != 2 {
-		t.Errorf("Picked the wrong submission (%v)", submission.ID)
+		t.Errorf("Picked the wrong submission (%v)", mock.ExpectationsWereMet())
 	}
 }
 
@@ -51,13 +33,10 @@ func TestLoadsNothing(t *testing.T) {
 	}
 	defer db.Close()
 
-	rows := sqlmock.NewRows([]string{"submissionId", "status", "fileName"}).
-		AddRow(1, "running", "foo.java").
-		AddRow(2, "running", "bar.java")
+	rows := sqlmock.NewRows([]string{"submissionId", "status", "fileName"})
+	mock.ExpectQuery("^SELECT (.+) FROM submission").WillReturnRows(rows)
 
-	mock.ExpectQuery("^SELECT (.+) FROM submissions$").WillReturnRows(rows)
-
-	if submission := getNextSubmission(db); submission != nil {
+	if submission, _ := getNextSubmission(db); submission != nil {
 		t.Errorf("Expected nil but got %v", submission)
 	}
 }
@@ -70,11 +49,10 @@ func TestClaimUpdatesStatus(t *testing.T) {
 	defer db.Close()
 
 	rows := sqlmock.NewRows([]string{"submissionId", "status", "fileName"}).
-		AddRow(1, "new", "foo.java").
-		AddRow(2, "running", "bar.java")
+		AddRow(2, "new", "foo.java")
 
-	mock.ExpectQuery("^SELECT (.+) FROM submissions$").WillReturnRows(rows)
-	mock.ExpectExec("UPDATE submission WHERE id = 1")
+	mock.ExpectQuery("^SELECT (.+) FROM submission").WillReturnRows(rows)
+	mock.ExpectExec("UPDATE submission").WithArgs(2, "running")
 
 	ClaimSubmission(db)
 
@@ -90,9 +68,14 @@ func TestUpdateStatusWithResult(t *testing.T) {
 	}
 	defer db.Close()
 
-	mock.ExpectExec("UPDATE submission WHERE id = 1")
+	mock.ExpectExec("UPDATE submission").WithArgs(1, "exception")
 
-	UpdateSubmissionResult(db, 1, "exception")
+	submission := &Submission{
+		ID: 1,
+		db: db,
+	}
+
+	submission.UpdateStatus("exception")
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("Expectations not met: %s", err)
