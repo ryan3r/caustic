@@ -183,6 +183,7 @@
 <br>
 <div class="card">
 <div class="pre-scrollable"><pre class="prettyprint"><code class="language-java">
+<!--    <span th:text="${Results.code}"></span>-->
 package main.java.com.zach.caustic.controller;
 
 import org.springframework.stereotype.Controller;
@@ -218,7 +219,8 @@ public class CausticController {
 <img src="/correct.png" alt="correct">
 <br>
 <h3><u>Score:</u></h3>
-<p>17/23</p>
+<!--<p><span th:text="${Results.score}"></span></p>-->
+<p>17 of 23</p>
 <script>
     jQuery(document).ready(
         function()
