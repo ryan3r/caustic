@@ -9,8 +9,18 @@ import org.springframework.lang.NonNull;
 
 @Entity
 public class Submission {
-    Submission() {
+    Submission() {}
 
+    /**
+     * Create a new submission
+     * @param problem The id of the problem this submission solves
+     * @param fileName The name of the submission file in /mnt/submissions
+     * @param className The name to use when running a file
+     */
+    Submission(long _problem, String _fileName, String _className) {
+        problem = _problem;
+        fileName = _fileName;
+        className = _className;
     }
 
     @Id
@@ -22,6 +32,11 @@ public class Submission {
 
     @NonNull
     String fileName;
+
+    @NonNull
+    long problem;
+
+    String className;
 
     // The status/result of a submission
     public enum SubmissionStatus {
