@@ -3,11 +3,10 @@ package runner
 import (
 	"context"
 	"errors"
+	"log"
 	"os/exec"
 	"strings"
 	"time"
-
-	"github.com/golang/glog"
 )
 
 // Detect the filetype and name of file
@@ -29,7 +28,7 @@ func compile(filename string) error {
 		compiler = "g++"
 	}
 
-	glog.Infof("Compiling %v as %v\n", filename, ft)
+	log.Printf("Compiling %v as %v\n", filename, ft)
 	return exec.Command(compiler, filename).Run()
 }
 
@@ -46,19 +45,19 @@ func run(ctx context.Context, filename string, output chan string, errs chan err
 	case "py":
 		cmd = exec.CommandContext(ctx, "python", filename)
 	default:
-		glog.Infof("Error unknown filetype %v\n", ft)
+		log.Printf("Error unknown filetype %v\n", ft)
 		errs <- errors.New("Unknown filetype")
 		return
 	}
 
-	glog.Infof("Running %v as %v", filename, ft)
+	log.Printf("Running %v as %v", filename, ft)
 	out, err := cmd.CombinedOutput()
 
 	if err != nil {
-		glog.Infof("Error running %v: %v\n", filename, err.Error())
+		log.Printf("Error running %v: %v\n", filename, err.Error())
 		errs <- err
 	} else {
-		glog.Infof("Completed %v no errors\n", filename)
+		log.Printf("Completed %v no errors\n", filename)
 		output <- string(out)
 	}
 }
