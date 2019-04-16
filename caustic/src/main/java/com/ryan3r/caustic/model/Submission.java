@@ -36,6 +36,10 @@ public class Submission {
     @NonNull
     long problem;
 
+    // The percent of inputs that have been tested (out of 100)
+    @NonNull
+    int progress; 
+
     String className;
 
     // The status/result of a submission
