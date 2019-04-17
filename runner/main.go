@@ -1,41 +1,74 @@
 package main
 
 import (
-	"database/sql"
-	"flag"
-	"fmt"
+	"context"
+	"io"
 	"os"
-	"runner"
-	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/ahmetalpbalkan/dlog"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/client"
 )
 
 func main() {
-	flag.Parse()
-	os.Chdir("/mnt/submissions")
+	cli, err := client.NewClientWithOpts(client.WithVersion("1.39"))
+	panicIf(err)
 
-	db, err := sql.Open("mysql", "root:"+os.Getenv("MYSQL_ROOT_PASSWORD")+"@tcp(db)/caustic")
-	if err != nil {
-		panic(err)
+	res, err := cli.ContainerCreate(context.Background(), &container.Config{
+		AttachStdin:  true,
+		AttachStdout: true,
+		Image:        "openjdk:13-jdk-alpine",
+		WorkingDir:   "/mnt",
+		Cmd:          []string{"sleep", "100"},
+	}, &container.HostConfig{
+		Mounts: []mount.Mount{
+			mount.Mount{
+				Type:   mount.TypeVolume,
+				Source: "cas",
+				Target: "/mnt",
+			},
+		},
+	}, nil, "caustic-running")
+	panicIf(err)
+
+	panicIf(cli.ContainerStart(context.Background(), res.ID, types.ContainerStartOptions{}))
+
+	execID, err := cli.ContainerExecCreate(context.Background(), res.ID, types.ExecConfig{
+		Cmd:          []string{"javac", "ok.java"},
+		AttachStdout: true,
+		AttachStderr: true,
+	})
+	panicIf(err)
+
+	con, err := cli.ContainerExecAttach(context.Background(), execID.ID, types.ExecStartCheck{})
+	panicIf(err)
+	defer con.Close()
+
+	io.Copy(os.Stdout, dlog.NewReader(con.Reader))
+
+	for i := 0; i < 3; i++ {
+		execID, err = cli.ContainerExecCreate(context.Background(), res.ID, types.ExecConfig{
+			Cmd:          []string{"java", "ok"},
+			AttachStdout: true,
+		})
+		panicIf(err)
+
+		con, err = cli.ContainerExecAttach(context.Background(), execID.ID, types.ExecStartCheck{})
+		panicIf(err)
+		defer con.Close()
+
+		io.Copy(os.Stdout, dlog.NewReader(con.Reader))
 	}
 
-	for {
-		submission, err := runner.ClaimSubmission(db)
-		if err != nil {
-			fmt.Println("Failed to claim a submission:", err)
-			time.Sleep(5 * time.Second)
-			continue
-		}
+	cli.ContainerStop(context.Background(), res.ID, nil)
+	cli.ContainerRemove(context.Background(), res.ID, types.ContainerRemoveOptions{})
+}
 
-		if submission == nil {
-			time.Sleep(5 * time.Second)
-			continue
-		}
-
-		err = submission.UpdateStatus(runner.Test(submission.FileName, "1 2 3"))
-		if err != nil {
-			fmt.Println("Error status for %s: %s", submission.FileName, err)
-		}
+func panicIf(err error) {
+	if err != nil {
+		panic(err)
 	}
 }
