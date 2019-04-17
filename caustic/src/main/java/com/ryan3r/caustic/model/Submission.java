@@ -13,11 +13,11 @@ public class Submission {
 
     /**
      * Create a new submission
-     * @param problem The id of the problem this submission solves
+     * @param problem The name of the problem this submission solves
      * @param fileName The name of the submission file in /mnt/submissions
      * @param className The name to use when running a file
      */
-    Submission(long _problem, String _fileName, String _className) {
+    Submission(String _problem, String _fileName, String _className) {
         problem = _problem;
         fileName = _fileName;
         className = _className;
@@ -34,7 +34,7 @@ public class Submission {
     String fileName;
 
     @NonNull
-    long problem;
+    String problem;
 
     // The percent of inputs that have been tested (out of 100)
     @NonNull
