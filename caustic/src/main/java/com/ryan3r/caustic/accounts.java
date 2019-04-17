@@ -7,7 +7,7 @@ import javax.persistence.Id;
 @Entity
 public class accounts {
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO) private Long id;
+	private String id;
 	private String username;
 	private String password;
 	private String accType;
@@ -19,6 +19,7 @@ public class accounts {
 		this.username = username;
 		this.password = password;
 		this.accType = accType;
+		this.id = username;
 	}
 	
 	@Override

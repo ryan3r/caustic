@@ -8,13 +8,26 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class accountsController {
+public class accountsController 
+{
 	@Autowired
 	accountsRepository a;
 	
 	@RequestMapping(method=RequestMethod.POST, value="/accounts")
-	public String addAccount(@RequestBody accounts account) {
+	public boolean addAccount(@RequestBody accounts account) 
+	{
+		if(a.findById(account.getUsername()) != null)
+			return false;
 		a.save(account);
-		return "Yeet";
+		return true;
+	}
+	@RequestMapping(method=RequestMethod.POST, value="/accountsLogin")
+	public boolean loginAccount(@RequestBody accounts account)
+	{
+		if(a.findById(account.getUsername()) == null)
+			return false;
+		else if(a.findById(account.getUsername()).get().getPassword() != account.getPassword())
+			return false;
+		return true;
 	}
 }
