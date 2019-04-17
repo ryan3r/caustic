@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/ahmetalpbalkan/dlog"
@@ -12,6 +13,10 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
+)
+
+var (
+	ErrExitStatusError = errors.New("Program exited with non-zero exit status")
 )
 
 type PullProgress struct {
@@ -33,17 +38,11 @@ func main() {
 
 	panicIf(pullImage(ctx, cli, "openjdk:13-jdk-alpine"))
 
-	res, err := createContainer(ctx, cli, "openjdk:13-jdk-alpine", false, []string{"javac", "ok.java"})
+	msg, err := runAsContainer(ctx, cli, "openjdk:13-jdk-alpine", []string{"javac", "ok.java"})
 	panicIf(err)
+	fmt.Println(msg)
 
-	doneC, errC := cli.ContainerWait(ctx, res.ID, "")
-	select {
-	case err = <-errC:
-		panicIf(err)
-	case <-doneC:
-	}
-
-	res, err = createContainer(ctx, cli, "openjdk:13-jdk-alpine", false, []string{"sleep", "100"})
+	res, err := createContainer(ctx, cli, "openjdk:13-jdk-alpine", false, []string{"sleep", "100"})
 	panicIf(err)
 
 	for i := 0; i < 3; i++ {
@@ -51,10 +50,6 @@ func main() {
 		panicIf(err)
 		fmt.Print(msg)
 	}
-
-	msg, err := execInContainer(ctx, cli, res.ID, []string{"sh", "-c", "exit 1"})
-	panicIf(err)
-	fmt.Print(msg)
 
 	cli.ContainerStop(context.Background(), res.ID, nil)
 }
@@ -111,6 +106,15 @@ func execInContainer(ctx context.Context, cli client.APIClient, containerID stri
 	buffer := new(bytes.Buffer)
 	buffer.ReadFrom(dlog.NewReader(con.Reader))
 
+	info, err := cli.ContainerExecInspect(ctx, execID.ID)
+	if err != nil {
+		return "", err
+	}
+
+	if info.ExitCode != 0 {
+		return buffer.String(), ErrExitStatusError
+	}
+
 	return buffer.String(), nil
 }
 
@@ -138,4 +142,36 @@ func pullImage(ctx context.Context, cli client.APIClient, image string) error {
 	}
 
 	return nil
+}
+
+func runAsContainer(ctx context.Context, cli client.APIClient, image string, cmd []string) (string, error) {
+	res, err := createContainer(ctx, cli, image, false, cmd)
+	if err != nil {
+		return "", err
+	}
+
+	reader, err := cli.ContainerLogs(ctx, res.ID, types.ContainerLogsOptions{
+		ShowStdout: true,
+	})
+	if err != nil {
+		return "", err
+	}
+	defer reader.Close()
+
+	buffer := new(bytes.Buffer)
+	go func() {
+		buffer.ReadFrom(dlog.NewReader(reader))
+	}()
+
+	doneC, errC := cli.ContainerWait(ctx, res.ID, "")
+	select {
+	case err = <-errC:
+		return "", err
+	case info := <-doneC:
+		if info.StatusCode != 0 {
+			return buffer.String(), ErrExitStatusError
+		}
+	}
+
+	return buffer.String(), nil
 }
