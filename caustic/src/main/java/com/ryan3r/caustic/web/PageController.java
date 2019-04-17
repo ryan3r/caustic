@@ -23,16 +23,15 @@ public class PageController {
     }
 
     @GetMapping("/profile")
-    public String profile(Model model/*,
+    public String profile(Model model,
                           @RequestParam(value="firstName", required=false, defaultValue="Zach") String firstName,
                           @RequestParam(value="lastName", required=false, defaultValue="Gorman") String lastName,
-                          @RequestParam(value="email", required=false, defaultValue="zgorman2@iastate.edu") String email,
-                          @RequestParam(value="rank", required=false, defaultValue="") int rank*/) {
+                          @RequestParam(value="email", required=false, defaultValue="zgorman2@iastate.edu") String email
+                         ) {
 
-        /*model.addAttribute("firstName", firstName);
+        model.addAttribute("firstName", firstName);
         model.addAttribute("lastName", lastName);
         model.addAttribute("email", email);
-        model.addAttribute("rank", rank);*/
 
         return "profile";
     }
