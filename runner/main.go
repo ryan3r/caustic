@@ -6,6 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/ahmetalpbalkan/dlog"
 
@@ -17,6 +21,7 @@ import (
 
 var (
 	ErrExitStatusError = errors.New("Program exited with non-zero exit status")
+	ErrTimeLimit       = errors.New("Program took too long to run")
 )
 
 type PullProgress struct {
@@ -32,26 +37,55 @@ type PullResponse struct {
 }
 
 func main() {
+	if len(os.Args) < 3 {
+		fmt.Println("Usage: main <submission dir> <submission file>")
+		os.Exit(1)
+	}
+
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.WithVersion("1.39"))
 	panicIf(err)
 
 	panicIf(pullImage(ctx, cli, "openjdk:13-jdk-alpine"))
 
-	msg, err := runAsContainer(ctx, cli, "openjdk:13-jdk-alpine", []string{"javac", "ok.java"})
-	panicIf(err)
+	msg, err := runAsContainer(ctx, cli, "openjdk:13-jdk-alpine", os.Args[1], []string{"javac", os.Args[2]})
+	if err != nil {
+		if err == ErrExitStatusError {
+			fmt.Println("Result: compile error")
+			return
+		}
+	}
 	fmt.Println(msg)
 
-	res, err := createContainer(ctx, cli, "openjdk:13-jdk-alpine", false, []string{"sleep", "100"})
+	res, err := createContainer(ctx, cli, "openjdk:13-jdk-alpine", os.Args[1], false, []string{"sleep", "100"})
 	panicIf(err)
 
+	className, _ := detectType(os.Args[2])
+
 	for i := 0; i < 3; i++ {
-		msg, err := execInContainer(ctx, cli, res.ID, []string{"java", "ok"})
-		panicIf(err)
+		msg, err := execInContainer(ctx, cli, res.ID, 3*time.Second, []string{"java", className})
+		if err != nil {
+			if err == ErrExitStatusError {
+				fmt.Println("Result: exception")
+			} else if err == ErrTimeLimit {
+				fmt.Println("Result: time limit exceded")
+				res, err = createContainer(ctx, cli, "openjdk:13-jdk-alpine", os.Args[1], false, []string{"sleep", "100"})
+				panicIf(err)
+			} else {
+				panic(err)
+			}
+		}
+
 		fmt.Print(msg)
 	}
 
-	cli.ContainerStop(context.Background(), res.ID, nil)
+	cli.ContainerStop(ctx, res.ID, nil)
+}
+
+// Detect the filetype and name of file
+func detectType(filename string) (string, string) {
+	idx := strings.LastIndex(filename, ".")
+	return filename[:idx], filename[idx+1:]
 }
 
 func panicIf(err error) {
@@ -60,10 +94,16 @@ func panicIf(err error) {
 	}
 }
 
-func createContainer(ctx context.Context, cli client.APIClient, image string, readonly bool, cmd []string) (container.ContainerCreateCreatedBody, error) {
+func createContainer(ctx context.Context, cli client.APIClient, image string, workDir string, readonly bool, cmd []string) (container.ContainerCreateCreatedBody, error) {
+	workDir, err := filepath.Abs(workDir)
+	if err != nil {
+		return container.ContainerCreateCreatedBody{}, err
+	}
+
 	res, err := cli.ContainerCreate(ctx, &container.Config{
 		AttachStdin:     true,
 		AttachStdout:    true,
+		AttachStderr:    true,
 		Image:           image,
 		WorkingDir:      "/mnt",
 		NetworkDisabled: true,
@@ -73,13 +113,13 @@ func createContainer(ctx context.Context, cli client.APIClient, image string, re
 		AutoRemove:     true,
 		Mounts: []mount.Mount{
 			mount.Mount{
-				Type:     mount.TypeVolume,
-				Source:   "cas",
+				Type:     mount.TypeBind,
+				Source:   workDir,
 				Target:   "/mnt",
 				ReadOnly: readonly,
 			},
 		},
-	}, nil, "caustic-running")
+	}, nil, "")
 	if err != nil {
 		return container.ContainerCreateCreatedBody{}, err
 	}
@@ -87,7 +127,7 @@ func createContainer(ctx context.Context, cli client.APIClient, image string, re
 	return res, cli.ContainerStart(ctx, res.ID, types.ContainerStartOptions{})
 }
 
-func execInContainer(ctx context.Context, cli client.APIClient, containerID string, cmd []string) (string, error) {
+func execInContainer(ctx context.Context, cli client.APIClient, containerID string, maxTime time.Duration, cmd []string) (string, error) {
 	execID, err := cli.ContainerExecCreate(ctx, containerID, types.ExecConfig{
 		Cmd:          cmd,
 		AttachStdout: true,
@@ -96,6 +136,18 @@ func execInContainer(ctx context.Context, cli client.APIClient, containerID stri
 	if err != nil {
 		return "", err
 	}
+
+	isTLE := false
+	done := make(chan bool, 1)
+	go func() {
+		timer := time.NewTimer(maxTime)
+		select {
+		case <-done:
+		case <-timer.C:
+			isTLE = true
+			panicIf(cli.ContainerKill(ctx, containerID, "SIGKILL"))
+		}
+	}()
 
 	con, err := cli.ContainerExecAttach(ctx, execID.ID, types.ExecStartCheck{})
 	if err != nil {
@@ -107,8 +159,13 @@ func execInContainer(ctx context.Context, cli client.APIClient, containerID stri
 	buffer.ReadFrom(dlog.NewReader(con.Reader))
 
 	info, err := cli.ContainerExecInspect(ctx, execID.ID)
+	done <- true
 	if err != nil {
 		return "", err
+	}
+
+	if isTLE {
+		return "", ErrTimeLimit
 	}
 
 	if info.ExitCode != 0 {
@@ -144,8 +201,8 @@ func pullImage(ctx context.Context, cli client.APIClient, image string) error {
 	return nil
 }
 
-func runAsContainer(ctx context.Context, cli client.APIClient, image string, cmd []string) (string, error) {
-	res, err := createContainer(ctx, cli, image, false, cmd)
+func runAsContainer(ctx context.Context, cli client.APIClient, image string, dirName string, cmd []string) (string, error) {
+	res, err := createContainer(ctx, cli, image, dirName, false, cmd)
 	if err != nil {
 		return "", err
 	}
