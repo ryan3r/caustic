@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -37,7 +39,7 @@ type PullResponse struct {
 }
 
 func main() {
-	if len(os.Args) < 3 {
+	if len(os.Args) < 4 {
 		fmt.Println("Usage: main <submission dir> <submission file>")
 		os.Exit(1)
 	}
@@ -62,8 +64,17 @@ func main() {
 
 	className, _ := detectType(os.Args[2])
 
-	for i := 0; i < 3; i++ {
-		msg, err := execInContainer(ctx, cli, res.ID, 3*time.Second, []string{"java", className})
+	tests, err := ioutil.ReadDir(os.Args[3])
+	panicIf(err)
+
+	for _, file := range tests {
+		_, fileType := detectType(file.Name())
+
+		if fileType != "in" {
+			continue
+		}
+
+		msg, err := execInContainer(ctx, cli, res.ID, 3*time.Second, filepath.Join(os.Args[3], file.Name()), []string{"java", className})
 		if err != nil {
 			if err == ErrExitStatusError {
 				fmt.Println("Result: exception")
@@ -127,9 +138,10 @@ func createContainer(ctx context.Context, cli client.APIClient, image string, wo
 	return res, cli.ContainerStart(ctx, res.ID, types.ContainerStartOptions{})
 }
 
-func execInContainer(ctx context.Context, cli client.APIClient, containerID string, maxTime time.Duration, cmd []string) (string, error) {
+func execInContainer(ctx context.Context, cli client.APIClient, containerID string, maxTime time.Duration, inFileName string, cmd []string) (string, error) {
 	execID, err := cli.ContainerExecCreate(ctx, containerID, types.ExecConfig{
 		Cmd:          cmd,
+		AttachStdin:  true,
 		AttachStdout: true,
 		AttachStderr: true,
 	})
@@ -153,7 +165,14 @@ func execInContainer(ctx context.Context, cli client.APIClient, containerID stri
 	if err != nil {
 		return "", err
 	}
-	defer con.Close()
+
+	inFile, err := os.Open(inFileName)
+	if err != nil {
+		return "", err
+	}
+
+	io.Copy(con.Conn, inFile)
+	con.CloseWrite()
 
 	buffer := new(bytes.Buffer)
 	buffer.ReadFrom(dlog.NewReader(con.Reader))

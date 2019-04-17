@@ -1,5 +1,11 @@
+import java.util.*;
+import java.io.*;
+
 public class ok {
     public static void main(String[] args) {
-        System.out.println("1 2 3");
+        Scanner s = new Scanner(System.in);
+        while(s.hasNextInt()) System.out.print(s.nextInt() + " ");
+        System.out.println();
+        s.close();
     }
 }
