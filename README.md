@@ -1,4 +1,5 @@
 # Caustic
+[![coverage report](https://git.linux.iastate.edu/319spring19projectrepositories/ko/group-33/badges/master/coverage.svg)](https://git.linux.iastate.edu/319spring19projectrepositories/ko/group-33/commits/master)
 
 [Install docker desktop](https://www.docker.com/products/docker-desktop) (windows professional and mac)
 [Install docker toolbox](https://docs.docker.com/toolbox/toolbox_install_windows/) (for windows home)
