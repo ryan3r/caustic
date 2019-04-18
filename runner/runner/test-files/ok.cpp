@@ -1,5 +1,9 @@
 #include <iostream>
 
 int main() {
-    std::cout << "1 2 3" << std::endl;
+    int k;
+    while(std::cin >> k) {
+        std::cout << k << " ";
+    }
+    std::cout << std::endl;
 }

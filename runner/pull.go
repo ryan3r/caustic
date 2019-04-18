@@ -19,6 +19,7 @@ type PullResponse struct {
 	ID             string       `json:"id"`
 }
 
+// Pull an image
 func (d *DockerClient) Pull(image string) error {
 	pullStats, err := d.cli.ImagePull(d.ctx, image, types.ImagePullOptions{})
 	if err != nil {
@@ -49,5 +50,15 @@ func (d *DockerClient) Pull(image string) error {
 		}
 	}
 
+	return nil
+}
+
+// PullAll images for registered languages
+func (d *DockerClient) PullAll() error {
+	for _, def := range languageDefs {
+		if err := d.Pull(def.Image); err != nil {
+			return err
+		}
+	}
 	return nil
 }

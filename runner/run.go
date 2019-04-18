@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"io"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -15,6 +17,28 @@ import (
 	"github.com/docker/docker/client"
 )
 
+var (
+	languageDefs       map[string]*LanguageDef
+	ErrUnknownFileType = errors.New("Unknown filetype")
+	ErrExitStatusError = errors.New("Program exited with non-zero exit status")
+	ErrTimeLimit       = errors.New("Program took too long to run")
+)
+
+// LanguageDef defines how to handle a file type
+type LanguageDef struct {
+	Image          string
+	CompileCommand func(string) []string
+	RunCommand     func(string) []string
+}
+
+// RegisterLanguage registers a language for the runner
+func RegisterLanguage(ft string, def *LanguageDef) {
+	if languageDefs == nil {
+		languageDefs = make(map[string]*LanguageDef)
+	}
+	languageDefs[ft] = def
+}
+
 // Detect the filetype and name of file
 func detectType(filename string) (string, string) {
 	idx := strings.LastIndex(filename, ".")
@@ -22,83 +46,147 @@ func detectType(filename string) (string, string) {
 }
 
 // Compile a file
-// func compile(filename string) error {
-// 	compiler := "javac"
-// 	_, ft := detectType(filename)
+func Compile(cli DockerClient, problemDir, filename string) error {
+	name, ft := detectType(filename)
+	def := languageDefs[ft]
 
-// 	if ft == "py" {
-// 		return nil
-// 	}
+	if def == nil {
+		return ErrUnknownFileType
+	}
 
-// 	if ft == "cpp" {
-// 		compiler = "g++"
-// 	}
+	// This language is interpreted
+	if def.CompileCommand == nil {
+		return nil
+	}
 
-// 	log.Printf("Compiling %v as %v\n", filename, ft)
-// 	return exec.Command(compiler, filename).Run()
-// }
+	compileCommand := def.CompileCommand(name)
 
-// // Run a program
-// func run(ctx context.Context, filename string, output chan string, errs chan error) {
-// 	name, ft := detectType(filename)
-// 	var cmd *exec.Cmd
+	compileCtr := Container{
+		Docker:     cli,
+		Image:      def.Image,
+		Cmd:        compileCommand,
+		WorkingDir: "/mnt",
+		Out:        os.Stdout,
+	}
 
-// 	switch ft {
-// 	case "java":
-// 		cmd = exec.CommandContext(ctx, "java", name)
-// 	case "cpp":
-// 		cmd = exec.CommandContext(ctx, "./a.out")
-// 	case "py":
-// 		cmd = exec.CommandContext(ctx, "python", filename)
-// 	default:
-// 		log.Printf("Error unknown filetype %v\n", ft)
-// 		errs <- errors.New("Unknown filetype")
-// 		return
-// 	}
+	panicIf(compileCtr.BindDir(problemDir, "/mnt", false))
+	panicIf(compileCtr.Run())
 
-// 	log.Printf("Running %v as %v", filename, ft)
-// 	out, err := cmd.CombinedOutput()
+	return compileCtr.Wait()
+}
 
-// 	if err != nil {
-// 		log.Printf("Error running %v: %v\n", filename, err.Error())
-// 		errs <- err
-// 	} else {
-// 		log.Printf("Completed %v no errors\n", filename)
-// 		output <- string(out)
-// 	}
-// }
+// Runner is a runner for a single test
+type Runner struct {
+	problemDir string
+	filename   string
+	container  *Container
+	timeLimit  time.Duration
+}
+
+// NewRunner creates the container for running tests
+func NewRunner(cli DockerClient, problemDir, filename string, timeLimit time.Duration) (*Runner, error) {
+	_, ft := detectType(filename)
+	def := languageDefs[ft]
+
+	testCtr := &Container{
+		Docker:     cli,
+		Image:      def.Image,
+		Cmd:        []string{"sleep", "100"},
+		WorkingDir: "/mnt",
+		Out:        os.Stdout,
+		ReadOnly:   true,
+	}
+
+	if err := testCtr.BindDir(problemDir, "/mnt", true); err != nil {
+		return nil, err
+	}
+
+	if err := testCtr.Run(); err != nil {
+		return nil, err
+	}
+
+	return &Runner{
+		problemDir: problemDir,
+		filename:   filename,
+		container:  testCtr,
+		timeLimit:  timeLimit,
+	}, nil
+}
+
+// Run the submission with the test case
+func (r *Runner) Run(in io.Reader, out io.Writer) error {
+	name, ft := detectType(r.filename)
+	def := languageDefs[ft]
+
+	exec := ContainerExec{
+		Container: r.container,
+		Cmd:       def.RunCommand(name),
+		In:        in,
+		Out:       out,
+	}
+
+	exec.Run()
+	exec.StartKillTimer(r.timeLimit)
+
+	err := <-exec.ExitC
+	if err == ErrTimeLimit {
+		r.container.Run()
+	}
+	return err
+}
+
+// Close stops the runner container
+func (r *Runner) Close() error {
+	return r.container.Stop()
+}
 
 // Test will compile, run and check a program
-// func Test(filename string, expected string) SubmissionStatus {
-// 	if err := compile(filename); err != nil {
-// 		return CompileError
-// 	}
+func Test(cli DockerClient, problemDir, fileName, solutionDir string) (SubmissionStatus, error) {
+	// Compile the solution
+	err := Compile(cli, os.Args[1], os.Args[2])
+	if err == ErrExitStatusError {
+		return CompileError, nil
+	} else if err != nil {
+		return New, err
+	}
 
-// 	errors := make(chan error, 1)
-// 	output := make(chan string, 1)
+	// Run the submissions
+	tests, err := ioutil.ReadDir(solutionDir)
+	if err != nil {
+		return New, err
+	}
 
-// 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-// 	run(ctx, filename, output, errors)
-// 	cancel()
+	runner, err := NewRunner(cli, problemDir, fileName, 3*time.Second)
+	if err != nil {
+		return New, err
+	}
+	defer runner.Close()
 
-// 	select {
-// 	case out := <-output: // process exited on time w/o errors
-// 		if strings.Trim(out, "\r\n\t ") == expected {
-// 			return Ok
-// 		}
-// 		return Wrong
-// 	case err := <-errors: // process crashed or was killed
-// 		if err.Error() == "signal: killed" {
-// 			return TimeLimit
-// 		}
-// 		return Exception
-// 	}
-// }
+	for _, file := range tests {
+		_, fileType := detectType(file.Name())
 
-var (
-	ErrExitStatusError = errors.New("Program exited with non-zero exit status")
-	ErrTimeLimit       = errors.New("Program took too long to run")
-)
+		if fileType != "in" {
+			continue
+		}
+
+		file, err := os.Open(filepath.Join(solutionDir, file.Name()))
+		if err != nil {
+			return New, err
+		}
+
+		if err := runner.Run(file, os.Stdout); err != nil {
+			if err == ErrExitStatusError {
+				return Exception, nil
+			} else if err == ErrTimeLimit {
+				return TimeLimit, nil
+			} else {
+				return New, err
+			}
+		}
+	}
+
+	return Ok, nil
+}
 
 // DockerClient is a APIClient + Context
 type DockerClient struct {
