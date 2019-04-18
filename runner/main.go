@@ -56,7 +56,7 @@ func main() {
 		ReadOnly:   true,
 	}
 
-	panicIf(compileCtr.BindDir(os.Args[1], "/mnt", true))
+	panicIf(testCtr.BindDir(os.Args[1], "/mnt", true))
 	panicIf(testCtr.Run())
 
 	className, _ := detectType(os.Args[2])

@@ -137,7 +137,6 @@ func (c *Container) BindDir(src string, dest string, readonly bool) (err error) 
 func (c *Container) Run() error {
 	// Create the container
 	res, err := c.Docker.cli.ContainerCreate(c.Docker.ctx, &container.Config{
-		AttachStdin:     true,
 		AttachStdout:    true,
 		AttachStderr:    true,
 		Image:           c.Image,
@@ -165,6 +164,7 @@ func (c *Container) Run() error {
 	reader, err := c.Docker.cli.ContainerLogs(c.Docker.ctx, res.ID, types.ContainerLogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
+		Follow:     true,
 	})
 	if err != nil {
 		return err
