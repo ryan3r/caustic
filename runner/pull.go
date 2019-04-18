@@ -1,12 +1,10 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
 )
 
 type PullProgress struct {
@@ -21,8 +19,8 @@ type PullResponse struct {
 	ID             string       `json:"id"`
 }
 
-func pullImage(ctx context.Context, cli client.APIClient, image string) error {
-	pullStats, err := cli.ImagePull(ctx, image, types.ImagePullOptions{})
+func (d *DockerClient) Pull(image string) error {
+	pullStats, err := d.cli.ImagePull(d.ctx, image, types.ImagePullOptions{})
 	if err != nil {
 		return err
 	}

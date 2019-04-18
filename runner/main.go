@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -12,34 +11,53 @@ import (
 	"github.com/docker/docker/client"
 )
 
-var (
-	ErrExitStatusError = errors.New("Program exited with non-zero exit status")
-	ErrTimeLimit       = errors.New("Program took too long to run")
-)
-
 func main() {
 	if len(os.Args) < 4 {
 		fmt.Println("Usage: main <submission dir> <submission file>")
 		os.Exit(1)
 	}
 
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.39"))
+	apiClient, err := client.NewClientWithOpts(client.WithVersion("1.39"))
 	panicIf(err)
 
-	panicIf(pullImage(ctx, cli, "openjdk:13-jdk-alpine"))
+	cli := DockerClient{
+		ctx: context.Background(),
+		cli: apiClient,
+	}
 
-	msg, err := runAsContainer(ctx, cli, "openjdk:13-jdk-alpine", os.Args[1], []string{"javac", os.Args[2]})
-	if err != nil {
+	panicIf(cli.Pull("openjdk:13-jdk-alpine"))
+
+	compileCtr := Container{
+		Docker:     cli,
+		Image:      "openjdk:13-jdk-alpine",
+		Cmd:        []string{"javac", os.Args[2]},
+		WorkingDir: "/mnt",
+		Out:        os.Stdout,
+	}
+
+	panicIf(compileCtr.BindDir(os.Args[1], "/mnt", false))
+	panicIf(compileCtr.Run())
+
+	if err := compileCtr.Wait(); err != nil {
 		if err == ErrExitStatusError {
 			fmt.Println("Result: compile error")
 			return
+		} else {
+			panic(err)
 		}
 	}
-	fmt.Println(msg)
 
-	res, err := createContainer(ctx, cli, "openjdk:13-jdk-alpine", os.Args[1], false, []string{"sleep", "100"})
-	panicIf(err)
+	testCtr := Container{
+		Docker:     cli,
+		Image:      "openjdk:13-jdk-alpine",
+		Cmd:        []string{"sleep", "100"},
+		WorkingDir: "/mnt",
+		Out:        os.Stdout,
+		ReadOnly:   true,
+	}
+
+	panicIf(compileCtr.BindDir(os.Args[1], "/mnt", true))
+	panicIf(testCtr.Run())
 
 	className, _ := detectType(os.Args[2])
 
@@ -53,23 +71,33 @@ func main() {
 			continue
 		}
 
-		msg, err := execInContainer(ctx, cli, res.ID, 3*time.Second, filepath.Join(os.Args[3], file.Name()), []string{"java", className})
-		if err != nil {
+		file, err := os.Open(filepath.Join(os.Args[3], file.Name()))
+		panicIf(err)
+
+		exec := ContainerExec{
+			Container: &testCtr,
+			Cmd:       []string{"java", className},
+			In:        file,
+			Out:       os.Stdout,
+		}
+
+		exec.Run()
+		exec.StartKillTimer(3 * time.Second)
+
+		if err := <-exec.ExitC; err != nil {
 			if err == ErrExitStatusError {
 				fmt.Println("Result: exception")
 			} else if err == ErrTimeLimit {
 				fmt.Println("Result: time limit exceded")
-				res, err = createContainer(ctx, cli, "openjdk:13-jdk-alpine", os.Args[1], false, []string{"sleep", "100"})
+				testCtr.Run()
 				panicIf(err)
 			} else {
 				panic(err)
 			}
 		}
-
-		fmt.Print(msg)
 	}
 
-	cli.ContainerStop(ctx, res.ID, nil)
+	panicIf(testCtr.Stop())
 }
 
 func panicIf(err error) {

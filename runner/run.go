@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"errors"
 	"io"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/ahmetalpbalkan/dlog"
 	"github.com/docker/docker/api/types"
@@ -93,6 +95,11 @@ func detectType(filename string) (string, string) {
 // 	}
 // }
 
+var (
+	ErrExitStatusError = errors.New("Program exited with non-zero exit status")
+	ErrTimeLimit       = errors.New("Program took too long to run")
+)
+
 // DockerClient is a APIClient + Context
 type DockerClient struct {
 	ctx context.Context
@@ -109,7 +116,7 @@ type Container struct {
 	ReadOnly       bool
 	WorkingDir     string
 	NetworkEnabled bool
-	Out            *io.Writer
+	Out            io.Writer
 }
 
 // BindDir adds a bind mount to the container
@@ -155,33 +162,76 @@ func (c *Container) Run() error {
 	}
 
 	// Wire up stdout/stderr
-	if c.Out != nil {
-		reader, err := c.Docker.cli.ContainerLogs(c.Docker.ctx, res.ID, types.ContainerLogsOptions{
-			ShowStdout: true,
-			ShowStderr: true,
-		})
-		if err != nil {
-			return err
-		}
+	reader, err := c.Docker.cli.ContainerLogs(c.Docker.ctx, res.ID, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+	})
+	if err != nil {
+		return err
+	}
 
-		go func() {
-			io.Copy(*c.Out, dlog.NewReader(reader))
-			reader.Close()
-		}()
+	go func() {
+		io.Copy(c.Out, dlog.NewReader(reader))
+		reader.Close()
+	}()
+
+	return nil
+}
+
+// Wait for the container to exit
+func (c *Container) Wait() error {
+	doneC, errC := c.Docker.cli.ContainerWait(c.Docker.ctx, c.ID, "")
+	select {
+	case err := <-errC:
+		return err
+	case info := <-doneC:
+		if info.StatusCode != 0 {
+			return ErrExitStatusError
+		}
 	}
 
 	return nil
 }
 
-type ContainerExec struct {
-	Container *Container
-	ID        string
-	Cmd       []string
+// Kill a container
+func (c *Container) Kill() error {
+	return c.Docker.cli.ContainerKill(c.Docker.ctx, c.ID, "SIGKILL")
 }
 
+// Stop a container
+func (c *Container) Stop() error {
+	return c.Docker.cli.ContainerStop(c.Docker.ctx, c.ID, nil)
+}
+
+// ContainerExec is a program executed inside a container other than the main program
+type ContainerExec struct {
+	Container   *Container
+	ID          string
+	Cmd         []string
+	In          io.Reader
+	Out         io.Writer
+	ExitC       chan error
+	isTimerKill bool
+}
+
+// StartKillTimer starts a timeout
+func (c *ContainerExec) StartKillTimer(timeout time.Duration) {
+	go func() {
+		timer := time.NewTimer(timeout)
+		select {
+		case <-c.ExitC:
+		case <-timer.C:
+			c.isTimerKill = true
+			c.Container.Kill()
+		}
+	}()
+}
+
+// Run creates the exec, starts it and wires up the stdio
 func (c *ContainerExec) Run() error {
+	// Create exec process
 	docker := c.Container.Docker
-	execID, err := docker.cli.ContainerExecCreate(docker.ctx, c.ID, types.ExecConfig{
+	execID, err := docker.cli.ContainerExecCreate(docker.ctx, c.Container.ID, types.ExecConfig{
 		Cmd:          c.Cmd,
 		AttachStdin:  true,
 		AttachStdout: true,
@@ -193,67 +243,41 @@ func (c *ContainerExec) Run() error {
 
 	c.ID = execID.ID
 
-	// isTLE := false
-	// done := make(chan bool, 1)
-	// go func() {
-	// 	timer := time.NewTimer(maxTime)
-	// 	select {
-	// 	case <-done:
-	// 	case <-timer.C:
-	// 		isTLE = true
-	// 		panicIf(cli.ContainerKill(ctx, containerID, "SIGKILL"))
-	// 	}
-	// }()
+	c.ExitC = make(chan error, 1)
+	// Connect stdio
+	conn, err := docker.cli.ContainerExecAttach(docker.ctx, execID.ID, types.ExecStartCheck{})
+	if err != nil {
+		return err
+	}
 
-	// con, err := cli.ContainerExecAttach(ctx, execID.ID, types.ExecStartCheck{})
-	// if err != nil {
-	// 	return "", err
-	// }
+	go func() {
+		io.Copy(conn.Conn, c.In)
+		conn.CloseWrite()
+	}()
 
-	// inFile, err := os.Open(inFileName)
-	// if err != nil {
-	// 	return "", err
-	// }
+	go func() {
+		io.Copy(c.Out, dlog.NewReader(conn.Reader))
+		conn.Close()
 
-	// io.Copy(con.Conn, inFile)
-	// con.CloseWrite()
+		// Get the exit status (no wait option)
+		info, err := docker.cli.ContainerExecInspect(docker.ctx, execID.ID)
+		if err != nil {
+			c.ExitC <- err
+			return
+		}
 
-	// buffer := new(bytes.Buffer)
-	// buffer.ReadFrom(dlog.NewReader(con.Reader))
+		if c.isTimerKill {
+			c.ExitC <- ErrTimeLimit
+			return
+		}
 
-	// info, err := cli.ContainerExecInspect(ctx, execID.ID)
-	// done <- true
-	// if err != nil {
-	// 	return "", err
-	// }
+		if info.ExitCode != 0 {
+			c.ExitC <- ErrExitStatusError
+			return
+		}
 
-	// if isTLE {
-	// 	return "", ErrTimeLimit
-	// }
+		c.ExitC <- nil
+	}()
 
-	// if info.ExitCode != 0 {
-	// 	return buffer.String(), ErrExitStatusError
-	// }
-
-	// return buffer.String(), nil
 	return nil
 }
-
-// func runAsContainer(ctx context.Context, cli client.APIClient, image string, dirName string, cmd []string) (string, error) {
-// 	res, err := createContainer(ctx, cli, image, dirName, false, cmd)
-// 	if err != nil {
-// 		return "", err
-// 	}
-
-// 	doneC, errC := cli.ContainerWait(ctx, res.ID, "")
-// 	select {
-// 	case err = <-errC:
-// 		return "", err
-// 	case info := <-doneC:
-// 		if info.StatusCode != 0 {
-// 			return buffer.String(), ErrExitStatusError
-// 		}
-// 	}
-
-// 	return buffer.String(), nil
-// }
