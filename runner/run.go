@@ -27,8 +27,8 @@ var (
 // LanguageDef defines how to handle a file type
 type LanguageDef struct {
 	Image          string
-	CompileCommand func(string) []string
-	RunCommand     func(string) []string
+	CompileCommand []string
+	RunCommand     []string
 }
 
 // RegisterLanguage registers a language for the runner
@@ -45,6 +45,17 @@ func detectType(filename string) (string, string) {
 	return filename[:idx], filename[idx+1:]
 }
 
+func expandTemplate(template []string, fileName, name string) []string {
+	templated := append([]string(nil), template...)
+
+	for i, orig := range templated {
+		tmp := strings.ReplaceAll(orig, "%n", name)
+		templated[i] = strings.ReplaceAll(tmp, "%f", fileName)
+	}
+
+	return templated
+}
+
 // Compile a file
 func Compile(cli DockerClient, problemDir, filename string) error {
 	name, ft := detectType(filename)
@@ -55,11 +66,11 @@ func Compile(cli DockerClient, problemDir, filename string) error {
 	}
 
 	// This language is interpreted
-	if def.CompileCommand == nil {
+	if len(def.CompileCommand) == 0 {
 		return nil
 	}
 
-	compileCommand := def.CompileCommand(name)
+	compileCommand := expandTemplate(def.CompileCommand, filename, name)
 
 	compileCtr := Container{
 		Docker:     cli,
@@ -120,7 +131,7 @@ func (r *Runner) Run(in io.Reader, out io.Writer) error {
 
 	exec := ContainerExec{
 		Container: r.container,
-		Cmd:       def.RunCommand(name),
+		Cmd:       expandTemplate(def.RunCommand, r.filename, name),
 		In:        in,
 		Out:       out,
 	}

@@ -23,30 +23,20 @@ func main() {
 	}
 
 	RegisterLanguage("java", &LanguageDef{
-		Image: "openjdk:13-jdk-alpine",
-		CompileCommand: func(name string) []string {
-			return []string{"javac", name + ".java"}
-		},
-		RunCommand: func(name string) []string {
-			return []string{"java", name}
-		},
+		Image:          "openjdk:13-jdk-alpine",
+		CompileCommand: []string{"javac", "%f"},
+		RunCommand:     []string{"java", "%n"},
 	})
 
 	RegisterLanguage("cpp", &LanguageDef{
-		Image: "gcc:5",
-		CompileCommand: func(name string) []string {
-			return []string{"g++", name + ".cpp", "-o", name}
-		},
-		RunCommand: func(name string) []string {
-			return []string{"./" + name}
-		},
+		Image:          "gcc:5",
+		CompileCommand: []string{"g++", "%f", "-o", "%n"},
+		RunCommand:     []string{"./%n"},
 	})
 
 	RegisterLanguage("py", &LanguageDef{
-		Image: "python",
-		RunCommand: func(name string) []string {
-			return []string{"python", name + ".py"}
-		},
+		Image:      "python",
+		RunCommand: []string{"python", "%f"},
 	})
 
 	panicIf(cli.PullAll())
