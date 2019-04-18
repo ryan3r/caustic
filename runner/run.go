@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -178,18 +179,20 @@ func Test(cli DockerClient, problemDir, fileName, solutionDir string) (Submissio
 	defer runner.Close()
 
 	for _, file := range tests {
-		_, fileType := detectType(file.Name())
+		name, fileType := detectType(file.Name())
 
 		if fileType != "in" {
 			continue
 		}
 
-		file, err := os.Open(filepath.Join(solutionDir, file.Name()))
+		fileIn, err := os.Open(filepath.Join(solutionDir, file.Name()))
 		if err != nil {
 			return New, err
 		}
 
-		if err := runner.Run(file, os.Stdout); err != nil {
+		outBuffer := bytes.NewBufferString("")
+
+		if err := runner.Run(fileIn, outBuffer); err != nil {
 			if err == ErrExitStatusError {
 				return Exception, nil
 			} else if err == ErrTimeLimit {
@@ -197,6 +200,19 @@ func Test(cli DockerClient, problemDir, fileName, solutionDir string) (Submissio
 			} else {
 				return New, err
 			}
+		}
+
+		// Verify the output of the submission
+		outFile, err := ioutil.ReadFile(filepath.Join(solutionDir, name+".out"))
+		if err != nil {
+			return Ok, err
+		}
+
+		expectedOut := strings.Trim(string(outFile), "\r\n\t ")
+		solutionOut := strings.Trim(string(outBuffer.String()), "\r\n\t ")
+
+		if expectedOut != solutionOut {
+			return Wrong, nil
 		}
 	}
 
