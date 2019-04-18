@@ -5,14 +5,27 @@ function validate() {
     var pssword = document.getElementById("password").value;
     let letNum = new RegExp("^[0-9a-zA-Z]+$");
     var login = false;
-    const URL = 'localhost:8080';
+    const URL = '/accountsLogin';
     if (usrname.length < 16 && letNum.test(usrname) && pssword.length > 5 && letNum.test(pssword)) {
         var obj = {username: usrname, password: pssword};
         var jsonData = JSON.stringify(obj);
-        $.post(URL, jsonData, function(data, status){login = status});
-        if(login)
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("POST", URL, true);
+        xmlhttp.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = function () {
+            if(xhr.readyState === 4 && xhr.status === 200) {
+              login = xhr.responseText;
+            }
+        };
+        if(!login)
+        {
+            alert("Login failed");
+        }
+        else
         {
             alert("Login successfully");
+            document.cookie = "username=" + usrname + "; expires=" + tomorrow + "; path=/";
+            xmlhttp.send(jsonData);
             window.location = "formUpload.html";
         }
         return false;
@@ -36,16 +49,32 @@ function create() {
     var pswdVer = document.getElementById("pswdVerify").value;
     let letNum = new RegExp("^[0-9a-zA-Z]+$");
     const URL = '/accounts';
+    var tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     if (usrname.length < 16 && letNum.test(usrname) && pssword.length > 5 && letNum.test(pssword)) {
         alert("Account Created");
         var obj = { username: usrname, password: pssword, accType: acc};
         var jsonData = JSON.stringify(obj);
         var xmlhttp = new XMLHttpRequest();
+        var bool = false;
         xmlhttp.open("POST", URL, true);
         xmlhttp.setRequestHeader("Content-Type", "application/json");
-        xmlhttp.send(jsonData);
-        window.location = "formUpload.html";
+        xhr.onreadystatechange = function () {
+            if(xhr.readyState === 4 && xhr.status === 200) {
+              bool = xhr.responseText;
+            }
+        };
+        if(!bool)
+        {
+            alert("Username already in use");
+        }
+        else
+        {
+            document.cookie = "username=" + usrname + "; expires=" + tomorrow + "; path=/";
+            xmlhttp.send(jsonData);
+            window.location = "formUpload.html";
+        }
         return false;
     } else {
         alert("Account not created. Form not valid");
