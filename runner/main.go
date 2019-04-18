@@ -200,6 +200,7 @@ func pullImage(ctx context.Context, cli client.APIClient, image string) error {
 		return err
 	}
 
+	needsNewline := false
 	decoder := json.NewDecoder(pullStats)
 	for decoder.More() {
 		var progress PullResponse
@@ -207,12 +208,18 @@ func pullImage(ctx context.Context, cli client.APIClient, image string) error {
 
 		switch progress.Status {
 		case "Downloading":
-			fmt.Printf("Downloading %s\n", progress.Progress)
+			needsNewline = true
+			fmt.Printf("\rDownloading %s", progress.Progress)
 
 		case "Extracting":
-			fmt.Printf("Extracting %s\n", progress.Progress)
+			needsNewline = true
+			fmt.Printf("\rExtracting %s", progress.Progress)
 
 		default:
+			if needsNewline {
+				fmt.Println()
+				needsNewline = false
+			}
 			fmt.Println(progress.Status)
 		}
 	}
