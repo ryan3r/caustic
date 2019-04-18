@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -29,6 +30,7 @@ type LanguageDef struct {
 	Image          string
 	CompileCommand []string
 	RunCommand     []string
+	Artifacts      []string
 }
 
 // RegisterLanguage registers a language for the runner
@@ -40,9 +42,9 @@ func RegisterLanguage(ft string, def *LanguageDef) {
 }
 
 // Detect the filetype and name of file
-func detectType(filename string) (string, string) {
-	idx := strings.LastIndex(filename, ".")
-	return filename[:idx], filename[idx+1:]
+func detectType(fileName string) (string, string) {
+	idx := strings.LastIndex(fileName, ".")
+	return fileName[:idx], fileName[idx+1:]
 }
 
 func expandTemplate(template []string, fileName, name string) []string {
@@ -57,8 +59,8 @@ func expandTemplate(template []string, fileName, name string) []string {
 }
 
 // Compile a file
-func Compile(cli DockerClient, problemDir, filename string) error {
-	name, ft := detectType(filename)
+func Compile(cli DockerClient, problemDir, fileName string) error {
+	name, ft := detectType(fileName)
 	def := languageDefs[ft]
 
 	if def == nil {
@@ -70,7 +72,7 @@ func Compile(cli DockerClient, problemDir, filename string) error {
 		return nil
 	}
 
-	compileCommand := expandTemplate(def.CompileCommand, filename, name)
+	compileCommand := expandTemplate(def.CompileCommand, fileName, name)
 
 	compileCtr := Container{
 		Docker:     cli,
@@ -89,14 +91,14 @@ func Compile(cli DockerClient, problemDir, filename string) error {
 // Runner is a runner for a single test
 type Runner struct {
 	problemDir string
-	filename   string
+	fileName   string
 	container  *Container
 	timeLimit  time.Duration
 }
 
 // NewRunner creates the container for running tests
-func NewRunner(cli DockerClient, problemDir, filename string, timeLimit time.Duration) (*Runner, error) {
-	_, ft := detectType(filename)
+func NewRunner(cli DockerClient, problemDir, fileName string, timeLimit time.Duration) (*Runner, error) {
+	_, ft := detectType(fileName)
 	def := languageDefs[ft]
 
 	testCtr := &Container{
@@ -118,7 +120,7 @@ func NewRunner(cli DockerClient, problemDir, filename string, timeLimit time.Dur
 
 	return &Runner{
 		problemDir: problemDir,
-		filename:   filename,
+		fileName:   fileName,
 		container:  testCtr,
 		timeLimit:  timeLimit,
 	}, nil
@@ -126,12 +128,12 @@ func NewRunner(cli DockerClient, problemDir, filename string, timeLimit time.Dur
 
 // Run the submission with the test case
 func (r *Runner) Run(in io.Reader, out io.Writer) error {
-	name, ft := detectType(r.filename)
+	name, ft := detectType(r.fileName)
 	def := languageDefs[ft]
 
 	exec := ContainerExec{
 		Container: r.container,
-		Cmd:       expandTemplate(def.RunCommand, r.filename, name),
+		Cmd:       expandTemplate(def.RunCommand, r.fileName, name),
 		In:        in,
 		Out:       out,
 	}
@@ -153,8 +155,10 @@ func (r *Runner) Close() error {
 
 // Test will compile, run and check a program
 func Test(cli DockerClient, problemDir, fileName, solutionDir string) (SubmissionStatus, error) {
+	defer cleanUpArtifacts(problemDir, fileName)
+
 	// Compile the solution
-	err := Compile(cli, os.Args[1], os.Args[2])
+	err := Compile(cli, problemDir, fileName)
 	if err == ErrExitStatusError {
 		return CompileError, nil
 	} else if err != nil {
@@ -197,6 +201,21 @@ func Test(cli DockerClient, problemDir, fileName, solutionDir string) (Submissio
 	}
 
 	return Ok, nil
+}
+
+func cleanUpArtifacts(problemDir, fileName string) {
+	name, ft := detectType(fileName)
+	def := languageDefs[ft]
+
+	if def.Artifacts == nil {
+		return
+	}
+
+	for _, artifact := range expandTemplate(def.Artifacts, fileName, name) {
+		if err := os.RemoveAll(filepath.Join(problemDir, artifact)); err != nil {
+			fmt.Printf("Warn: Failed to clean up artifacts (%v, %v)\n", problemDir, artifact)
+		}
+	}
 }
 
 // DockerClient is a APIClient + Context

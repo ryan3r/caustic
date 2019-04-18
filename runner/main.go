@@ -26,12 +26,14 @@ func main() {
 		Image:          "openjdk:13-jdk-alpine",
 		CompileCommand: []string{"javac", "%f"},
 		RunCommand:     []string{"java", "%n"},
+		Artifacts:      []string{"%n.class"},
 	})
 
 	RegisterLanguage("cpp", &LanguageDef{
 		Image:          "gcc:5",
 		CompileCommand: []string{"g++", "%f", "-o", "%n"},
 		RunCommand:     []string{"./%n"},
+		Artifacts:      []string{"%n"},
 	})
 
 	RegisterLanguage("py", &LanguageDef{
