@@ -24,9 +24,7 @@ public class accountsController
 	@RequestMapping(method=RequestMethod.POST, value="/accountsLogin")
 	public boolean loginAccount(@RequestBody accounts account)
 	{
-		if(a.findById(account.getUsername()) == null)
-			return false;
-		else if(a.findById(account.getUsername()).get().getPassword() != account.getPassword())
+		if(a.findUser(account.getUsername()) != null)
 			return false;
 		return true;
 	}
