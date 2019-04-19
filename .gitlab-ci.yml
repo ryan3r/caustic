@@ -26,6 +26,7 @@ RunnerTest:
     - go get github.com/docker/docker/client
     - go get github.com/DATA-DOG/go-sqlmock
     - go get github.com/ahmetalpbalkan/dlog
+    - go get github.com/go-sql-driver/mysql
   script:
     - cp -r runner /go/src
     - cd /go/src/runner
