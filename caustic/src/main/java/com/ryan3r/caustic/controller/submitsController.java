@@ -1,13 +1,10 @@
-package com.ryan3r.caustic;
-import java.io.File;
-import java.io.FileOutputStream;
+package com.ryan3r.caustic.controller;
 import java.io.IOException;
 
+import com.ryan3r.caustic.repository.submitsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;

@@ -1,4 +1,4 @@
-package com.ryan3r.caustic;
+package com.ryan3r.caustic.model;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -12,7 +12,7 @@ public class accounts {
 	private String username;
 	private String password;
 	private String accType;
-	
+
 	public accounts() {}
 	
 	public accounts(String username, String password, String accType)

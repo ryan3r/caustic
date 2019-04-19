@@ -1,11 +1,12 @@
-package com.ryan3r.caustic.web;
+package com.ryan3r.caustic.controller;
 
+import com.ryan3r.caustic.repository.accountsRepository;
 import com.ryan3r.caustic.model.Scoreboard;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,27 +23,26 @@ public class PageController {
         return "index";
     }
 
+    accountsRepository a;
+
     @GetMapping("/profile")
-    public String profile(Model model,
-                          @RequestParam(value="firstName", required=false, defaultValue="Zach") String firstName,
-                          @RequestParam(value="lastName", required=false, defaultValue="Gorman") String lastName,
-                          @RequestParam(value="email", required=false, defaultValue="zgorman2@iastate.edu") String email
+    public String profile(Model model/*,
+                          @CookieValue("username") String usrNameCookie,
+                          @CookieValue("accType") String accType*/
                          ) {
 
-        model.addAttribute("firstName", firstName);
-        model.addAttribute("lastName", lastName);
-        model.addAttribute("email", email);
-
+        //model.addAttribute("username", usrNameCookie);
+        //model.addAttribute("accType", accType);
         return "profile";
     }
 
     @GetMapping("/results")
-    public String results(Model model/*, @RequestParam(value="result", required=false, defaultValue="fail") String result*/) {
-        /*model.addAttribute("result", result);*/
+    public String results(Model model) {
+        //model.addAttribute("result", result);
         return "results";
     }
 
-    List<Scoreboard> scoreList = new ArrayList<>();
+    private List<Scoreboard> scoreList = new ArrayList<>();
 
     @GetMapping("/scoreboard")
     public String scoreboard(Model model){

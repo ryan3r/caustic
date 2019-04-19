@@ -1,4 +1,4 @@
-package com.ryan3r.caustic.web;
+package com.ryan3r.caustic;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;

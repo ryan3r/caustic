@@ -1,4 +1,4 @@
-package com.ryan3r.caustic;
+package com.ryan3r.caustic.model;
 import java.io.File;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
