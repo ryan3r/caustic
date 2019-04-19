@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/docker/docker/client"
@@ -41,7 +40,7 @@ func main() {
 
 	panicIf(cli.PullAll())
 
-	db, err := sql.Open("mysql", "root:"+os.Getenv("MYSQL_ROOT_PASSWORD")+"@tcp(db)/caustic")
+	db, err := sql.Open("mysql", "root:password@tcp(localhost:3307)/caustic")
 	panicIf(err)
 
 	for {
@@ -60,7 +59,7 @@ func main() {
 
 		fmt.Println("Running");
 
-		status, err := Test(cli, "/mnt/submissions/"+string(submission.ID), submission.FileName, "/mnt/problem/")
+		status, err := Test(cli, "test-files/0", submission.FileName, "test-files/problem")
 		panicIf(err)
 
 		fmt.Printf("Status %s: %s\n", submission.FileName, status)
