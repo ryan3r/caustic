@@ -19,8 +19,8 @@ public class submitsController {
 	@Autowired
 	submitsRepository s;
 	
-	@RequestMapping(method=RequestMethod.POST, value="/maps/{id}/upload/{user}", consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
-	public void uploadMapServer(@RequestParam("file") MultipartFile file, @PathVariable String id, @PathVariable String user) throws IOException {
+	@RequestMapping(method=RequestMethod.POST, value="/submit", consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
+	public void uploadMapServer(@RequestParam("upload") MultipartFile file) throws IOException {
 		
 	}
 	
