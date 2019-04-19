@@ -18,7 +18,17 @@ public class submitsController {
 	
 	@RequestMapping(method=RequestMethod.POST, value="/submit", consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
 	public void uploadMapServer(@RequestParam("upload") MultipartFile file) throws IOException {
-		
+		String idp = new String("IDPLACEHOLDER");
+		File f = new File("IDPLACEHOLDER","/mnt/submissions"); 
+		if(!f.exists())
+		{
+			f.mkdir();
+		}
+		File fNew = new File(file.getName(), "/mnt/submissions/" + idp);
+		fNew.createNewFile();
+		FileOutputStream fout = new FileOutputStream(fNew);
+		fout.write(file.getBytes());
+		fout.close();
 	}
 	
 	
