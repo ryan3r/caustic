@@ -5,6 +5,8 @@ function validate() {
     var pssword = document.getElementById("password").value;
     let letNum = new RegExp("^[0-9a-zA-Z]+$");
     var login = false;
+    var tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
     const URL = '/accountsLogin';
     if (usrname.length < 16 && letNum.test(usrname) && pssword.length > 5 && letNum.test(pssword)) {
         var obj = {username: usrname, password: pssword};
@@ -15,19 +17,19 @@ function validate() {
         xmlhttp.onreadystatechange = function () {
             if(xmlhttp.readyState === 4 && xmlhttp.status === 200) {
               login = JSON.parse(xmlhttp.responseText);
+                if(!login)
+                {
+                    alert("Login failed");
+                }
+                else
+                {
+                    alert("Login successfully");
+                    document.cookie = "username=" + usrname + "; expires=" + tomorrow + "; path=/";
+                    window.location.href = "formUpload";
+                }
             }
         };
-        if(!login)
-        {
-            alert("Login failed");
-        }
-        else
-        {
-            alert("Login successfully");
-            document.cookie = "username=" + usrname + "; expires=" + tomorrow + "; path=/";
-            xmlhttp.send(jsonData);
-            window.location = "formUpload.html";
-        }
+        xmlhttp.send(JSON.stringify(obj));
         return false;
     } else {
         attempt--;// Decrementing by one.
@@ -55,7 +57,6 @@ function create() {
     if (usrname.length < 16 && letNum.test(usrname) && pssword.length > 5 && letNum.test(pssword)) {
         alert("Account Created");
         var obj = { username: usrname, password: pssword, accType: acc};
-        var jsonData = JSON.stringify(obj);
         var xmlhttp = new XMLHttpRequest();
         var bool = false;
         xmlhttp.open("POST", URL, true);
@@ -63,18 +64,17 @@ function create() {
         xmlhttp.onreadystatechange = function () {
             if(xmlhttp.readyState === 4 && xmlhttp.status === 200) {
               bool = JSON.parse(xmlhttp.responseText);
-		if(!bool)
-		{
+		    if(!bool)
+		    {
 	            alert("Username already in use");
         	}
 	        else
     		{
 	            document.cookie = "username=" + usrname + "; expires=" + tomorrow + "; path=/";
-        	    xmlhttp.send(jsonData);
-	            window.location = "formUpload.html";
+	            window.location.href = "formUpload";
         	}
-            }
-        };
+        }
+    };
 	xmlhttp.send(JSON.stringify(obj));
         
         return false;
