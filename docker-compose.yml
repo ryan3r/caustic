@@ -9,7 +9,7 @@ services:
     depends_on:
       - db
     volumes:
-      - "submissions:/mnt/submissions"
+      - "./runner/test-files:/mnt/submissions"
 
   db:
     image: mysql
@@ -20,18 +20,6 @@ services:
     env_file: .env
     volumes:
       - "db:/var/lib/mysql"
-
-  runner:
-    image: ryan3r/caustic-runner
-    build: ./runner
-    env_file: .env
-    depends_on:
-      - caustic
-    # volumes:
-    #   - "submissions:/mnt/submissions"
-    # Temporary config until we can upload files
-    volumes:
-      - "./runner/runner/test-files:/mnt/submissions"
 
 volumes:
   db:

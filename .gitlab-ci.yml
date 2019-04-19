@@ -21,14 +21,15 @@ RunnerTest:
   stage: test
   tags:
     - docker
-  image: ryan3r/caustic-runner
+  image: golang
   before_script:
-    - apk add --no-cache git
-    - go get github.com/golang/glog
+    - go get github.com/docker/docker/client
     - go get github.com/DATA-DOG/go-sqlmock
+    - go get github.com/ahmetalpbalkan/dlog
+    - go get github.com/go-sql-driver/mysql
   script:
-    - cp -r runner/runner /go/src
-    - pushd /go/src/runner
+    - cp -r runner /go/src
+    - cd /go/src/runner
     - go test -cover
 
 DockerUpload:

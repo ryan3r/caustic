@@ -2,23 +2,16 @@ FROM golang:1.12-alpine AS build
 
 WORKDIR /go/src
 RUN apk add --no-cache git && \
-	go get github.com/golang/glog && \
-	go get github.com/go-sql-driver/mysql
+	go get github.com/docker/docker/client && \
+	go get github.com/go-sql-driver/mysql && \
+	go get github.com/ahmetalpbalkan/dlog
 COPY . .
-RUN go build main.go
+RUN go build *.go
 
 FROM golang:1.12-alpine
 
-RUN apk add --no-cache \
-	bash \
-	curl \
-	gcc \
-	g++ \
-	openjdk8 \
-	python
-
 WORKDIR /app
 ENV PATH="$PATH:/usr/lib/jvm/java-1.8-openjdk/bin/"
-COPY --from=build /go/src/main .
+COPY --from=build /go/src/db main
 
 CMD ["/app/main"]
