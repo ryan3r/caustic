@@ -20,7 +20,7 @@ func TestCanDetectFileType(t *testing.T) {
 
 var cli *DockerClient
 
-const TEST_FILES = "test-files"
+const TEST_FILES = "test-files/0"
 
 func RunTestCase(t *testing.T, testFile string, expected SubmissionStatus) {
 	if cli == nil {
