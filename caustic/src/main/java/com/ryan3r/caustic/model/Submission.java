@@ -17,10 +17,9 @@ public class Submission {
      * @param fileName The name of the submission file in /mnt/submissions
      * @param className The name to use when running a file
      */
-    Submission(String _problem, String _fileName, String _className) {
+    Submission(String _problem, String _fileName) {
         problem = _problem;
         fileName = _fileName;
-        className = _className;
     }
 
     @Id
@@ -35,12 +34,6 @@ public class Submission {
 
     @NonNull
     String problem;
-
-    // The percent of inputs that have been tested (out of 100)
-    @NonNull
-    int progress; 
-
-    String className;
 
     // The status/result of a submission
     public enum SubmissionStatus {

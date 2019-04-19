@@ -13,8 +13,8 @@ func TestCanLoadCode(t *testing.T) {
 	}
 	defer db.Close()
 
-	rows := sqlmock.NewRows([]string{"submissionId", "status", "fileName"}).
-		AddRow(1, New, "foo.java")
+	rows := sqlmock.NewRows([]string{"submissionId", "status", "fileName", "problem"}).
+		AddRow(1, New, "foo.java", 1)
 
 	mock.ExpectQuery("SELECT (.+) FROM submission").
 		WillReturnRows(rows)
@@ -33,7 +33,7 @@ func TestLoadsNothing(t *testing.T) {
 	}
 	defer db.Close()
 
-	rows := sqlmock.NewRows([]string{"submissionId", "status", "fileName"})
+	rows := sqlmock.NewRows([]string{"submissionId", "status", "fileName", "problem"})
 	mock.ExpectQuery("^SELECT (.+) FROM submission").WillReturnRows(rows)
 
 	if submission, _ := getNextSubmission(db); submission != nil {
@@ -48,8 +48,8 @@ func TestClaimUpdatesStatus(t *testing.T) {
 	}
 	defer db.Close()
 
-	rows := sqlmock.NewRows([]string{"submissionId", "status", "fileName"}).
-		AddRow(2, New, "foo.java")
+	rows := sqlmock.NewRows([]string{"submissionId", "status", "fileName", "problem"}).
+		AddRow(2, New, "foo.java", 2)
 
 	mock.ExpectQuery("^SELECT (.+) FROM submission").WillReturnRows(rows)
 	mock.ExpectExec("UPDATE submission").WithArgs(Running, 2)

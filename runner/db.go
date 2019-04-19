@@ -17,11 +17,30 @@ const (
 	Exception    SubmissionStatus = 6
 )
 
+func (s SubmissionStatus) String() string {
+	switch s {
+	case New:
+		return "New"
+	case Running:
+		return "Running"
+	case CompileError:
+		return "CompileError"
+	case Ok:
+		return "Ok"
+	case Wrong:
+		return "Wrong"
+	case TimeLimit:
+		return "TimeLimitExceded"
+	}
+	return "Exception"
+}
+
 // Submission in the database
 type Submission struct {
 	ID       int64
 	Status   SubmissionStatus
 	FileName string
+	Problem  int64
 	db       *sql.DB
 }
 
@@ -30,8 +49,8 @@ func getNextSubmission(db *sql.DB) (*Submission, error) {
 		db: db,
 	}
 
-	err := db.QueryRow("SELECT submission_id, status, file_name FROM submission WHERE status = 'new' LIMIT 1").
-		Scan(&submission.ID, &submission.Status, &submission.FileName)
+	err := db.QueryRow("SELECT submission_id, status, file_name, problem FROM submission WHERE status = 'new' LIMIT 1").
+		Scan(&submission.ID, &submission.Status, &submission.FileName, &submission.Problem)
 
 	if err == sql.ErrNoRows {
 		err = nil

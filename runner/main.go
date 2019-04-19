@@ -2,18 +2,16 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/docker/docker/client"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
-	if len(os.Args) < 4 {
-		fmt.Println("Usage: main <submission dir> <submission file>")
-		os.Exit(1)
-	}
-
 	apiClient, err := client.NewClientWithOpts(client.WithVersion("1.39"))
 	panicIf(err)
 
@@ -43,10 +41,35 @@ func main() {
 
 	panicIf(cli.PullAll())
 
-	status, err := Test(cli, os.Args[1], os.Args[2], os.Args[3])
+	db, err := sql.Open("mysql", "root:"+os.Getenv("MYSQL_ROOT_PASSWORD")+"@tcp(db)/caustic")
 	panicIf(err)
 
-	fmt.Println("Status:", status)
+	for {
+		submission, err := ClaimSubmission(db)
+		if err != nil {
+			fmt.Println("Failed to claim a submission:", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		if submission == nil {
+			fmt.Println("Empty");
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		fmt.Println("Running");
+
+		status, err := Test(cli, "/mnt/submissions/"+string(submission.ID), submission.FileName, "/mnt/problem/")
+		panicIf(err)
+
+		fmt.Printf("Status %s: %s\n", submission.FileName, status)
+
+		err = submission.UpdateStatus(status)
+		if err != nil {
+			fmt.Printf("Error updating status for %s: %s\n", submission.FileName, err)
+		}
+	}
 }
 
 func panicIf(err error) {

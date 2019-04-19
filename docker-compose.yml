@@ -31,7 +31,9 @@ services:
     #   - "submissions:/mnt/submissions"
     # Temporary config until we can upload files
     volumes:
-      - "./runner/runner/test-files:/mnt/submissions"
+      - "./runner/test-files:/mnt/submissions"
+      - "./runner/test-files/problem:/mnt/problem"
+      - "/var/run/docker.sock:/var/run/docker.sock"
 
 volumes:
   db:
