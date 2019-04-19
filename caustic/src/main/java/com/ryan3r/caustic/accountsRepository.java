@@ -5,6 +5,6 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
 public interface accountsRepository extends CrudRepository<accounts, String>{
-    @Query("SELECT account FROM accounts WHERE account.username = :username")
+    @Query(value = "SELECT * FROM accounts account WHERE account.username = :username", nativeQuery = true)
     accounts findUser(@Param("username") String username);
 }
