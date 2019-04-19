@@ -12,9 +12,9 @@ function validate() {
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.open("POST", URL, true);
         xmlhttp.setRequestHeader("Content-Type", "application/json");
-        xhr.onreadystatechange = function () {
-            if(xhr.readyState === 4 && xhr.status === 200) {
-              login = xhr.responseText;
+        xmlhttp.onreadystatechange = function () {
+            if(xmlhttp.readyState === 4 && xmlhttp.status === 200) {
+              login = JSON.parse(xmlhttp.responseText);
             }
         };
         if(!login)
