@@ -16,7 +16,7 @@ public class accountsController
 	@RequestMapping(method=RequestMethod.POST, value="/accounts")
 	public boolean addAccount(@RequestBody accounts account) 
 	{
-		if(a.findById(account.getUsername()) != null)
+		if(a.findUser(account.getUsername()) != null)
 			return false;
 		a.save(account);
 		return true;

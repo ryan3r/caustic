@@ -60,21 +60,23 @@ function create() {
         var bool = false;
         xmlhttp.open("POST", URL, true);
         xmlhttp.setRequestHeader("Content-Type", "application/json");
-        xhr.onreadystatechange = function () {
-            if(xhr.readyState === 4 && xhr.status === 200) {
-              bool = xhr.responseText;
+        xmlhttp.onreadystatechange = function () {
+            if(xmlhttp.readyState === 4 && xmlhttp.status === 200) {
+              bool = JSON.parse(xmlhttp.responseText);
+		if(!bool)
+		{
+	            alert("Username already in use");
+        	}
+	        else
+    		{
+	            document.cookie = "username=" + usrname + "; expires=" + tomorrow + "; path=/";
+        	    xmlhttp.send(jsonData);
+	            window.location = "formUpload.html";
+        	}
             }
         };
-        if(!bool)
-        {
-            alert("Username already in use");
-        }
-        else
-        {
-            document.cookie = "username=" + usrname + "; expires=" + tomorrow + "; path=/";
-            xmlhttp.send(jsonData);
-            window.location = "formUpload.html";
-        }
+	xmlhttp.send(JSON.stringify(obj));
+        
         return false;
     } else {
         alert("Account not created. Form not valid");
