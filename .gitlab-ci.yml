@@ -1,5 +1,6 @@
 stages:
   - test
+  - build
   - upload
 
 SpringTest:
@@ -31,6 +32,36 @@ RunnerTest:
     - cp -r runner /go/src
     - cd /go/src/runner
     - go test -cover
+
+RunnerBuild:
+  stage: build
+  tags:
+    - docker
+  image: golang
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - build/
+  before_script:
+    - go get github.com/docker/docker/client
+    - go get github.com/DATA-DOG/go-sqlmock
+    - go get github.com/ahmetalpbalkan/dlog
+    - go get github.com/go-sql-driver/mysql
+  script:
+    - cp -r runner /go/src
+    - pushd /go/src/runner
+    - go build *.go
+    - mv db caustic-linux
+    - GOOS=darwin go build *.go
+    - mv db caustic-macos
+    - GOOS=windows go build *.go
+    - mv db.exe caustic-windows.exe
+    - popd
+    - mkdir build
+    - cp /go/src/runner/caustic-* build
+    - cp /go/src/runner/caustic-* /www
+  only:
+    - master
 
 DockerUpload:
   stage: upload

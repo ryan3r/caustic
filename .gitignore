@@ -1,3 +1,4 @@
 *.class
 a.out
 runner/github.com
+.DS_Store
