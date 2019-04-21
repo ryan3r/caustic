@@ -59,6 +59,9 @@ RunnerBuild:
     - popd
     - mkdir build
     - cp /go/src/runner/caustic-* build
+    - cp /go/src/runner/caustic-* /www
+  only:
+    - master
 
 DockerUpload:
   stage: upload
