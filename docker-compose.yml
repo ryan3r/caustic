@@ -3,13 +3,16 @@ services:
   caustic:
     build: ./caustic
     image: ryan3r/caustic
+    labels:
+      com.ryan3r.caustic.is-spring: "yes"
     ports:
       - "8080:8080"
     env_file: .env
     depends_on:
       - db
     volumes:
-      - "./runner/test-files:/mnt/submissions"
+      - "./submissions:/mnt/submissions"
+      - "./problems:/mnt/problems"
 
   db:
     image: mysql

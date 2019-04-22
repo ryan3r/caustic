@@ -83,13 +83,13 @@ func (s *Submission) UpdateStatus(status SubmissionStatus) error {
 	return err
 }
 
-// CreateConnection to the mysql container in docker compose
-func CreateConnection(cli DockerClient) (*sql.DB, error) {
+// FindContainer by label
+func FindContainer(cli DockerClient, label string) (*types.ContainerJSON, error) {
 	// Try to find the mysql container by label
 	containers, err := cli.cli.ContainerList(cli.ctx, types.ContainerListOptions{
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "label",
-			Value: "com.ryan3r.caustic.is-db",
+			Value: label,
 		}, filters.KeyValuePair{
 			Key:   "status",
 			Value: "running",
@@ -100,15 +100,21 @@ func CreateConnection(cli DockerClient) (*sql.DB, error) {
 	}
 
 	if len(containers) == 0 {
-		return nil, errors.New("could not find a suitible mysql container")
+		return nil, errors.New("could not find a suitible container")
 	}
 
 	if len(containers) > 1 {
-		return nil, errors.New("found multiple suitible mysql containers")
+		return nil, errors.New("found multiple suitible containers")
 	}
 
 	// Get the container info
-	info, err := cli.cli.ContainerInspect(cli.ctx, containers[0].ID)
+	ctr, err := cli.cli.ContainerInspect(cli.ctx, containers[0].ID)
+	return &ctr, err
+}
+
+// CreateConnection to the mysql container in docker compose
+func CreateConnection(cli DockerClient) (*sql.DB, error) {
+	info, err := FindContainer(cli, "com.ryan3r.caustic.is-db")
 	if err != nil {
 		return nil, err
 	}

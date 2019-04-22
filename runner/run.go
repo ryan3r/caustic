@@ -186,6 +186,7 @@ func Test(cli DockerClient, problemDir, fileName, solutionDir string) (Submissio
 		if err != nil {
 			return New, err
 		}
+		defer fileIn.Close()
 
 		outBuffer := bytes.NewBufferString("")
 

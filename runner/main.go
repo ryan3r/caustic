@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/docker/docker/client"
@@ -93,6 +94,17 @@ func main() {
 	loadLanguages(cli)
 	db := connectDb(cli)
 
+	submissions, err := filepath.Abs("submissions")
+	if err != nil {
+		fmt.Printf("Error getting submissions path: %s\n", err)
+		os.Exit(127)
+	}
+	problems, err := filepath.Abs("problems")
+	if err != nil {
+		fmt.Printf("Error getting problems path: %s\n", err)
+		os.Exit(127)
+	}
+
 	// Start testing submissions
 	fmt.Println("Connected\nWaiting for submissions")
 	for {
@@ -111,9 +123,10 @@ func main() {
 
 		fmt.Println("Running submission", submission.ID)
 
-		status, err := Test(cli, "test-files/0", submission.FileName, "test-files/problem")
+		strID := fmt.Sprintf("%v", submission.ID)
+		status, err := Test(cli, filepath.Join(submissions, strID), submission.FileName, filepath.Join(problems, strID))
 		if err != nil {
-			fmt.Printf("Error testing submission: %v\n", submission.ID)
+			fmt.Printf("Error testing submission: %v (%s)\n", submission.ID, err)
 
 			// Put the submission back for another runner
 			updateStatus(submission, New)
