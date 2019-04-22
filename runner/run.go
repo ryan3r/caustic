@@ -28,18 +28,10 @@ var (
 
 // LanguageDef defines how to handle a file type
 type LanguageDef struct {
-	Image          string
-	CompileCommand []string
-	RunCommand     []string
-	Artifacts      []string
-}
-
-// RegisterLanguage registers a language for the runner
-func RegisterLanguage(ft string, def *LanguageDef) {
-	if languageDefs == nil {
-		languageDefs = make(map[string]*LanguageDef)
-	}
-	languageDefs[ft] = def
+	Image          string   `json:"image"`
+	CompileCommand []string `json:"compile"`
+	RunCommand     []string `json:"run"`
+	Artifacts      []string `json:"artifacts"`
 }
 
 // Detect the filetype and name of file
