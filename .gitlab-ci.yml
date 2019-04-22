@@ -68,6 +68,9 @@ DockerUpload:
   tags:
     - shell
   script:
-    - sudo upload-to-docker $CI_COMMIT_TAG
+    - cd /usr/caustic
+    - docker-compose down
+    - docker-compose up --build -d
+    - sudo systemctl restart caustic
   only:
     - tags
