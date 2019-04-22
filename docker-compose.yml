@@ -13,6 +13,8 @@ services:
 
   db:
     image: mysql
+    labels:
+      com.ryan3r.caustic.is-db: "yes"
     ports:
       - "3307:3306"
     environment:

@@ -2,6 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"errors"
+	"strings"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
 )
 
 // SubmissionStatus for a submission
@@ -76,4 +81,57 @@ func (s *Submission) UpdateStatus(status SubmissionStatus) error {
 	s.Status = status
 	_, err := s.db.Exec("UPDATE submission SET status = ? WHERE submission_id = ?", s.Status, s.ID)
 	return err
+}
+
+// CreateConnection to the mysql container in docker compose
+func CreateConnection(cli DockerClient) (*sql.DB, error) {
+	// Try to find the mysql container by label
+	containers, err := cli.cli.ContainerList(cli.ctx, types.ContainerListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key:   "label",
+			Value: "com.ryan3r.caustic.is-db",
+		}, filters.KeyValuePair{
+			Key:   "status",
+			Value: "running",
+		}),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(containers) == 0 {
+		return nil, errors.New("could not find a suitible mysql container")
+	}
+
+	if len(containers) > 1 {
+		return nil, errors.New("found multiple suitible mysql containers")
+	}
+
+	// Get the container info
+	info, err := cli.cli.ContainerInspect(cli.ctx, containers[0].ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(info.NetworkSettings.Ports["3306/tcp"]) == 0 {
+		return nil, errors.New("Port 3306 is not exposed on mysql")
+	}
+
+	binding := info.NetworkSettings.Ports["3306/tcp"][0]
+
+	// Find the mysql password
+	password := ""
+	for _, pair := range info.Config.Env {
+		parts := strings.Split(pair, "=")
+		if parts[0] == "MYSQL_ROOT_PASSWORD" {
+			password = parts[1]
+		}
+	}
+
+	if password == "" {
+		return nil, errors.New("could not find mysql root password")
+	}
+
+	conn := "root:" + password + "@tcp(" + binding.HostIP + ":" + binding.HostPort + ")/caustic"
+	return sql.Open("mysql", conn)
 }

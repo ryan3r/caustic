@@ -40,7 +40,7 @@ func main() {
 
 	panicIf(cli.PullAll())
 
-	db, err := sql.Open("mysql", "root:password@tcp(localhost:3307)/caustic")
+	db, err := CreateConnection(cli)
 	panicIf(err)
 
 	for {
