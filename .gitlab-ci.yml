@@ -68,9 +68,11 @@ DockerUpload:
   tags:
     - shell
   script:
+    - docker-compose build
+    - cp docker-compose.yml /usr/caustic
     - cd /usr/caustic
     - docker-compose down
-    - docker-compose up --build -d
+    - docker-compose up -d
     - sudo systemctl restart caustic
   only:
     - tags
