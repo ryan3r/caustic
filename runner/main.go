@@ -4,15 +4,29 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/docker/docker/client"
 	_ "github.com/go-sql-driver/mysql"
 )
 
+const (
+	// MaxPings to the db before crashing (is high because the docker db must initialize)
+	MaxPings = 15
+	// RecoveryTime to wait between pings or errors returned by the db
+	RecoveryTime = 5 * time.Second
+	// PollingInterval is the cool down interval for when we run out of submissions to claim
+	PollingInterval = 3 * time.Second
+)
+
 func main() {
 	apiClient, err := client.NewClientWithOpts(client.WithVersion("1.39"))
-	panicIf(err)
+	if err != nil {
+		fmt.Printf("Failed to connect to docker: %s\n", err)
+		fmt.Println("Make sure you have docker installed and it is running")
+		os.Exit(127)
+	}
 
 	cli := DockerClient{
 		ctx: context.Background(),
@@ -38,41 +52,69 @@ func main() {
 		RunCommand: []string{"python", "%f"},
 	})
 
-	panicIf(cli.PullAll())
+	fmt.Println("Pulling language images")
+	if err := cli.PullAll(); err != nil {
+		fmt.Println("An error occured while pulling language images")
+		os.Exit(127)
+	}
 
 	db, err := CreateConnection(cli)
-	panicIf(err)
+	if err != nil {
+		fmt.Printf("Failed to find mysql in docker trying localhost (%s)\n", err)
 
+		// This is to make spring boot development easier don't use this outside of development
+		db, err = sql.Open("mysql", "root:Pa$$word1@tcp(localhost:3306)/caustic")
+		if err != nil {
+			fmt.Printf("Failed to connect to local database: %s\n", err)
+			os.Exit(127)
+		}
+	}
+
+	fmt.Printf("Attempting to connect to mysql (timeout in %v)\n", MaxPings*RecoveryTime)
+	// Ping the db upto maxPings times before failing
+	for pings := 0; db.Ping() != nil; pings++ {
+		if pings > MaxPings {
+			fmt.Printf("Failed to connect to db after %v attempts\n", MaxPings)
+			os.Exit(127)
+		}
+
+		time.Sleep(RecoveryTime)
+	}
+
+	// Start testing submissions
+	fmt.Println("Connected\nWaiting for submissions")
 	for {
 		submission, err := ClaimSubmission(db)
 		if err != nil {
 			fmt.Println("Failed to claim a submission:", err)
-			time.Sleep(5 * time.Second)
+			time.Sleep(RecoveryTime)
 			continue
 		}
 
+		// Sleep if there are no submissions
 		if submission == nil {
-			fmt.Println("Empty");
-			time.Sleep(5 * time.Second)
+			time.Sleep(PollingInterval)
 			continue
 		}
 
-		fmt.Println("Running");
+		fmt.Println("Running submission", submission.ID)
 
 		status, err := Test(cli, "test-files/0", submission.FileName, "test-files/problem")
-		panicIf(err)
+		if err != nil {
+			fmt.Printf("Error testing submission: %v\n", submission.ID)
 
-		fmt.Printf("Status %s: %s\n", submission.FileName, status)
+			// Put the submission back for another runner
+			err = submission.UpdateStatus(New)
+			if err != nil {
+				fmt.Printf("Error updating status for %v: %s\n", submission.ID, err)
+			}
+		}
+
+		fmt.Printf("Submission status %v: %s\n", submission.ID, status)
 
 		err = submission.UpdateStatus(status)
 		if err != nil {
-			fmt.Printf("Error updating status for %s: %s\n", submission.FileName, err)
+			fmt.Printf("Error updating status for %v: %s\n", submission.ID, err)
 		}
-	}
-}
-
-func panicIf(err error) {
-	if err != nil {
-		panic(err)
 	}
 }

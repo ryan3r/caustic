@@ -83,8 +83,13 @@ func Compile(cli DockerClient, problemDir, fileName string) error {
 		Out:        os.Stdout,
 	}
 
-	panicIf(compileCtr.BindDir(problemDir, "/mnt", false))
-	panicIf(compileCtr.Run())
+	if err := compileCtr.BindDir(problemDir, "/mnt", false); err != nil {
+		return err
+	}
+
+	if err := compileCtr.Run(); err != nil {
+		return err
+	}
 
 	return compileCtr.Wait()
 }
