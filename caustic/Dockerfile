@@ -3,8 +3,9 @@ FROM openjdk:13-jdk-alpine AS build
 WORKDIR /usr/src/app
 COPY . .
 RUN chmod +x mvnw && \
-	sed -i 's/localhost/db/g' src/main/resources/application.properties && \
+	sed -i 's/localhost/\$\{MYSQL_HOST\}/g' src/main/resources/application.properties && \
 	sed -i 's/Pa$$word1/\$\{MYSQL_ROOT_PASSWORD\}/g' src/main/resources/application.properties && \
+	sed -i 's/root/\$\{MYSQL_USER\}/g' src/main/resources/application.properties && \
 	./mvnw package -Dmaven.test.skip=true
 
 FROM openjdk:8-jre-alpine

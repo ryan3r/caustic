@@ -3,76 +3,135 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/docker/docker/client"
 	_ "github.com/go-sql-driver/mysql"
 )
 
+const (
+	// MaxPings to the db before crashing (is high because the docker db must initialize)
+	MaxPings = 15
+	// RecoveryTime to wait between pings or errors returned by the db
+	RecoveryTime = 5 * time.Second
+	// PollingInterval is the cool down interval for when we run out of submissions to claim
+	PollingInterval = 3 * time.Second
+)
+
+// Load the language config and pull the language images
+func loadLanguages(cli DockerClient) {
+	langFile, err := ioutil.ReadFile("languages.json")
+	if err != nil {
+		fmt.Printf("Failed to open laugage definitions: %s\n", err)
+	}
+
+	languageDefs = make(map[string]*LanguageDef)
+	if err := json.Unmarshal(langFile, &languageDefs); err != nil {
+		fmt.Println("Failed to parse languages")
+	}
+
+	fmt.Println("Pulling language images")
+	if err := cli.PullAll(); err != nil {
+		fmt.Println("An error occured while pulling language images")
+		os.Exit(127)
+	}
+}
+
+// Connect to the database
+func connectDb(cli DockerClient) *sql.DB {
+	dbURL, ok := os.LookupEnv("MYSQL_URL")
+	if !ok {
+		dbURL = "root:password@tcp(localhost:3307)/caustic"
+	}
+
+	db, err := sql.Open("mysql", dbURL)
+	if err != nil {
+		fmt.Printf("Failed to connect to local database: %s\n", err)
+		os.Exit(127)
+	}
+
+	fmt.Printf("Attempting to connect to mysql (timeout in %v)\n", MaxPings*RecoveryTime)
+	// Ping the db upto maxPings times before failing
+	for pings := 0; db.Ping() != nil; pings++ {
+		if pings > MaxPings {
+			fmt.Printf("Failed to connect to db after %v attempts\n", MaxPings)
+			os.Exit(127)
+		}
+
+		time.Sleep(RecoveryTime)
+	}
+
+	return db
+}
+
+// Update a submision's status or print an error
+func updateStatus(submission *Submission, status SubmissionStatus) {
+	err := submission.UpdateStatus(status)
+	if err != nil {
+		fmt.Printf("Error updating status for %v: %s\n", submission.ID, err)
+	}
+}
+
 func main() {
 	apiClient, err := client.NewClientWithOpts(client.WithVersion("1.39"))
-	panicIf(err)
+	if err != nil {
+		fmt.Printf("Failed to connect to docker: %s\n", err)
+		fmt.Println("Make sure you have docker installed and it is running")
+		os.Exit(127)
+	}
 
 	cli := DockerClient{
 		ctx: context.Background(),
 		cli: apiClient,
 	}
 
-	RegisterLanguage("java", &LanguageDef{
-		Image:          "openjdk:13-jdk-alpine",
-		CompileCommand: []string{"javac", "%f"},
-		RunCommand:     []string{"java", "%n"},
-		Artifacts:      []string{"%n.class"},
-	})
+	loadLanguages(cli)
+	db := connectDb(cli)
 
-	RegisterLanguage("cpp", &LanguageDef{
-		Image:          "gcc:5",
-		CompileCommand: []string{"g++", "%f", "-o", "%n"},
-		RunCommand:     []string{"./%n"},
-		Artifacts:      []string{"%n"},
-	})
+	submissions, err := filepath.Abs("submissions")
+	if err != nil {
+		fmt.Printf("Error getting submissions path: %s\n", err)
+		os.Exit(127)
+	}
+	problems, err := filepath.Abs("problems")
+	if err != nil {
+		fmt.Printf("Error getting problems path: %s\n", err)
+		os.Exit(127)
+	}
 
-	RegisterLanguage("py", &LanguageDef{
-		Image:      "python",
-		RunCommand: []string{"python", "%f"},
-	})
-
-	panicIf(cli.PullAll())
-
-	db, err := sql.Open("mysql", "root:password@tcp(localhost:3307)/caustic")
-	panicIf(err)
-
+	// Start testing submissions
+	fmt.Println("Connected\nWaiting for submissions")
 	for {
 		submission, err := ClaimSubmission(db)
 		if err != nil {
 			fmt.Println("Failed to claim a submission:", err)
-			time.Sleep(5 * time.Second)
+			time.Sleep(RecoveryTime)
 			continue
 		}
 
+		// Sleep if there are no submissions
 		if submission == nil {
-			fmt.Println("Empty");
-			time.Sleep(5 * time.Second)
+			time.Sleep(PollingInterval)
 			continue
 		}
 
-		fmt.Println("Running");
+		fmt.Println("Running submission", submission.ID)
 
-		status, err := Test(cli, "test-files/0", submission.FileName, "test-files/problem")
-		panicIf(err)
-
-		fmt.Printf("Status %s: %s\n", submission.FileName, status)
-
-		err = submission.UpdateStatus(status)
+		strID := fmt.Sprintf("%v", submission.ID)
+		status, err := Test(cli, filepath.Join(submissions, strID), submission.FileName, filepath.Join(problems, strID))
 		if err != nil {
-			fmt.Printf("Error updating status for %s: %s\n", submission.FileName, err)
-		}
-	}
-}
+			fmt.Printf("Error testing submission: %v (%s)\n", submission.ID, err)
 
-func panicIf(err error) {
-	if err != nil {
-		panic(err)
+			// Put the submission back for another runner
+			updateStatus(submission, New)
+		}
+
+		fmt.Printf("Submission status %v: %s\n", submission.ID, status)
+		updateStatus(submission, status)
 	}
 }

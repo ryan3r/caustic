@@ -6,13 +6,19 @@ services:
     ports:
       - "8080:8080"
     env_file: .env
+    environment: 
+      - "MYSQL_HOST=db"
+      - "MYSQL_USER=root"
     depends_on:
       - db
     volumes:
-      - "./runner/test-files:/mnt/submissions"
+      - "./submissions:/mnt/submissions"
+      - "./problems:/mnt/problems"
 
   db:
     image: mysql
+    labels:
+      com.ryan3r.caustic.is-db: "yes"
     ports:
       - "3307:3306"
     environment:
