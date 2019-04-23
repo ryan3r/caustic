@@ -8,6 +8,7 @@ services:
     env_file: .env
     environment: 
       - "MYSQL_HOST=db"
+      - "MYSQL_USER=root"
     depends_on:
       - db
     volumes:
