@@ -78,6 +78,8 @@ func updateStatus(submission *Submission, status SubmissionStatus) {
 }
 
 func main() {
+	fmt.Println("Caustic runner (--COMMIT-HASH-HERE--)")
+
 	apiClient, err := client.NewClientWithOpts(client.WithVersion("1.39"))
 	if err != nil {
 		fmt.Printf("Failed to connect to docker: %s\n", err)
