@@ -59,6 +59,7 @@ RunnerBuild:
     - popd
     - mkdir build
     - cp /go/src/runner/caustic-* build
+    - sudo systemctl stop caustic
     - cp /go/src/runner/caustic-* /www
   only:
     - master
@@ -74,6 +75,6 @@ DockerUpload:
     - cd /usr/caustic
     - docker-compose down
     - docker-compose up -d
-    - sudo systemctl restart caustic
+    - sudo systemctl start caustic
   only:
     - tags
