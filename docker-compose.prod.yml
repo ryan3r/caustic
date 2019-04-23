@@ -11,18 +11,5 @@ services:
       - "./submissions:/mnt/submissions"
       - "./problems:/mnt/problems"
 
-  db:
-    image: mysql
-    labels:
-      com.ryan3r.caustic.is-db: "yes"
-    ports:
-      - "3307:3306"
-    environment:
-      MYSQL_DATABASE: "caustic"
-    env_file: .env
-    volumes:
-      - "db:/var/lib/mysql"
-
 volumes:
-  db:
   submissions:
