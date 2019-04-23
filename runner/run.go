@@ -28,18 +28,10 @@ var (
 
 // LanguageDef defines how to handle a file type
 type LanguageDef struct {
-	Image          string
-	CompileCommand []string
-	RunCommand     []string
-	Artifacts      []string
-}
-
-// RegisterLanguage registers a language for the runner
-func RegisterLanguage(ft string, def *LanguageDef) {
-	if languageDefs == nil {
-		languageDefs = make(map[string]*LanguageDef)
-	}
-	languageDefs[ft] = def
+	Image          string   `json:"image"`
+	CompileCommand []string `json:"compile"`
+	RunCommand     []string `json:"run"`
+	Artifacts      []string `json:"artifacts"`
 }
 
 // Detect the filetype and name of file
@@ -83,8 +75,13 @@ func Compile(cli DockerClient, problemDir, fileName string) error {
 		Out:        os.Stdout,
 	}
 
-	panicIf(compileCtr.BindDir(problemDir, "/mnt", false))
-	panicIf(compileCtr.Run())
+	if err := compileCtr.BindDir(problemDir, "/mnt", false); err != nil {
+		return err
+	}
+
+	if err := compileCtr.Run(); err != nil {
+		return err
+	}
 
 	return compileCtr.Wait()
 }
@@ -189,6 +186,7 @@ func Test(cli DockerClient, problemDir, fileName, solutionDir string) (Submissio
 		if err != nil {
 			return New, err
 		}
+		defer fileIn.Close()
 
 		outBuffer := bytes.NewBufferString("")
 

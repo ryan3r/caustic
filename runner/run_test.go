@@ -24,25 +24,6 @@ const TEST_FILES = "test-files"
 
 func RunTestCase(t *testing.T, testFile string, expected SubmissionStatus) {
 	if cli == nil {
-		RegisterLanguage("java", &LanguageDef{
-			Image:          "openjdk:13-jdk-alpine",
-			CompileCommand: []string{"javac", "%f"},
-			RunCommand:     []string{"java", "%n"},
-			Artifacts:      []string{"%n.class"},
-		})
-
-		RegisterLanguage("cpp", &LanguageDef{
-			Image:          "gcc:5",
-			CompileCommand: []string{"g++", "%f", "-o", "%n"},
-			RunCommand:     []string{"./%n"},
-			Artifacts:      []string{"%n"},
-		})
-
-		RegisterLanguage("py", &LanguageDef{
-			Image:      "python",
-			RunCommand: []string{"python", "%f"},
-		})
-
 		apiClient, err := client.NewClientWithOpts(client.WithVersion("1.39"))
 		if err != nil {
 			t.Error(err)
@@ -52,9 +33,7 @@ func RunTestCase(t *testing.T, testFile string, expected SubmissionStatus) {
 			cli: apiClient,
 		}
 
-		if err := cli.PullAll(); err != nil {
-			t.Error(err)
-		}
+		loadLanguages(*cli)
 	}
 
 	result, err := Test(*cli, TEST_FILES+"/0", testFile, filepath.Join(TEST_FILES, "/problem"))

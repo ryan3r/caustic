@@ -1,0 +1,13 @@
+version: '3'
+services:
+  caustic:
+    image: ryan3r/caustic
+    ports:
+      - "80:8080"
+    env_file: .env
+    volumes:
+      - "./submissions:/mnt/submissions"
+      - "./problems:/mnt/problems"
+
+volumes:
+  submissions:

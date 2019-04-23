@@ -2,6 +2,10 @@ package main
 
 import (
 	"database/sql"
+	"errors"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
 )
 
 // SubmissionStatus for a submission
@@ -76,4 +80,33 @@ func (s *Submission) UpdateStatus(status SubmissionStatus) error {
 	s.Status = status
 	_, err := s.db.Exec("UPDATE submission SET status = ? WHERE submission_id = ?", s.Status, s.ID)
 	return err
+}
+
+// FindContainer by label
+func FindContainer(cli DockerClient, label string) (*types.ContainerJSON, error) {
+	// Try to find the mysql container by label
+	containers, err := cli.cli.ContainerList(cli.ctx, types.ContainerListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key:   "label",
+			Value: label,
+		}, filters.KeyValuePair{
+			Key:   "status",
+			Value: "running",
+		}),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(containers) == 0 {
+		return nil, errors.New("could not find a suitible container")
+	}
+
+	if len(containers) > 1 {
+		return nil, errors.New("found multiple suitible containers")
+	}
+
+	// Get the container info
+	ctr, err := cli.cli.ContainerInspect(cli.ctx, containers[0].ID)
+	return &ctr, err
 }
