@@ -50,7 +50,7 @@ RunnerBuild:
   script:
     - cp -r runner /go/src
     - pushd /go/src/runner
-    - sed -i "s/--COMMIT-HASH-HERE--/$CI_COMMIT_SHORT_SHA/"
+    - sed -i "s/--COMMIT-HASH-HERE--/$CI_COMMIT_SHORT_SHA/" main.go
     - go build *.go
     - mv db caustic-linux
     - GOOS=darwin go build *.go
