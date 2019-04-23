@@ -44,16 +44,15 @@ func loadLanguages(cli DockerClient) {
 
 // Connect to the database
 func connectDb(cli DockerClient) *sql.DB {
-	db, err := CreateConnection(cli)
-	if err != nil {
-		fmt.Printf("Failed to find mysql in docker trying localhost (%s)\n", err)
+	dbURL, ok := os.LookupEnv("MYSQL_URL")
+	if !ok {
+		dbURL = "root:password@tcp(localhost:3307)/caustic"
+	}
 
-		// This is to make spring boot development easier don't use this outside of development
-		db, err = sql.Open("mysql", "root:Pa$$word1@tcp(localhost:3306)/caustic")
-		if err != nil {
-			fmt.Printf("Failed to connect to local database: %s\n", err)
-			os.Exit(127)
-		}
+	db, err := sql.Open("mysql", dbURL)
+	if err != nil {
+		fmt.Printf("Failed to connect to local database: %s\n", err)
+		os.Exit(127)
 	}
 
 	fmt.Printf("Attempting to connect to mysql (timeout in %v)\n", MaxPings*RecoveryTime)

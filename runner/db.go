@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"errors"
-	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -110,34 +109,4 @@ func FindContainer(cli DockerClient, label string) (*types.ContainerJSON, error)
 	// Get the container info
 	ctr, err := cli.cli.ContainerInspect(cli.ctx, containers[0].ID)
 	return &ctr, err
-}
-
-// CreateConnection to the mysql container in docker compose
-func CreateConnection(cli DockerClient) (*sql.DB, error) {
-	info, err := FindContainer(cli, "com.ryan3r.caustic.is-db")
-	if err != nil {
-		return nil, err
-	}
-
-	if len(info.NetworkSettings.Ports["3306/tcp"]) == 0 {
-		return nil, errors.New("Port 3306 is not exposed on mysql")
-	}
-
-	binding := info.NetworkSettings.Ports["3306/tcp"][0]
-
-	// Find the mysql password
-	password := ""
-	for _, pair := range info.Config.Env {
-		parts := strings.Split(pair, "=")
-		if parts[0] == "MYSQL_ROOT_PASSWORD" {
-			password = parts[1]
-		}
-	}
-
-	if password == "" {
-		return nil, errors.New("could not find mysql root password")
-	}
-
-	conn := "root:" + password + "@tcp(" + binding.HostIP + ":" + binding.HostPort + ")/caustic"
-	return sql.Open("mysql", conn)
 }
