@@ -69,7 +69,7 @@ DockerUpload:
     - shell
   script:
     - docker-compose build
-    - cp docker-compose.yml /usr/caustic
+    - cp docker-compose.prod.yml /usr/caustic/docker-compose.yml
     - cd /usr/caustic
     - docker-compose down
     - docker-compose up -d
