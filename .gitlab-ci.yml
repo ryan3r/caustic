@@ -59,7 +59,6 @@ RunnerBuild:
     - popd
     - mkdir build
     - cp /go/src/runner/caustic-* build
-    - sudo systemctl stop caustic
     - cp /go/src/runner/caustic-* /www
   only:
     - master
@@ -70,6 +69,8 @@ DockerUpload:
   tags:
     - shell
   script:
+    - sudo systemctl stop caustic
+    - cp /var/www/html/caustic-linux /usr/caustic/runner
     - docker-compose build
     - cp docker-compose.prod.yml /usr/caustic/docker-compose.yml
     - cd /usr/caustic
