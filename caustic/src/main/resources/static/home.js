@@ -55,7 +55,6 @@ function create() {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     if (usrname.length < 16 && letNum.test(usrname) && pssword.length > 5 && letNum.test(pssword)) {
-        alert("Account Created");
         var obj = { username: usrname, password: pssword, accType: acc};
         var xmlhttp = new XMLHttpRequest();
         var bool = false;
