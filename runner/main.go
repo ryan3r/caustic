@@ -115,7 +115,7 @@ func runSubmissions(cli *DockerClient, submissions, problems string, submissionC
 			fmt.Printf("Error testing submission: %v (%s)\n", submission.ID, err)
 
 			// Put the submission back for another runner
-			updateStatus(submission, New)
+			updateStatus(submission, RunnerError)
 		}
 
 		fmt.Printf("Submission status %v: %s\n", submission.ID, status)

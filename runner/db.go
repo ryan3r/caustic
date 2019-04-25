@@ -12,13 +12,22 @@ import (
 type SubmissionStatus int
 
 const (
-	New          SubmissionStatus = 0
-	Running      SubmissionStatus = 1
+	// New submission
+	New SubmissionStatus = 0
+	// Running submission
+	Running SubmissionStatus = 1
+	// CompileError in submission
 	CompileError SubmissionStatus = 2
-	Ok           SubmissionStatus = 3
-	Wrong        SubmissionStatus = 4
-	TimeLimit    SubmissionStatus = 5
-	Exception    SubmissionStatus = 6
+	// Ok aka accepted submission
+	Ok SubmissionStatus = 3
+	// Wrong answer
+	Wrong SubmissionStatus = 4
+	// TimeLimit exceded
+	TimeLimit SubmissionStatus = 5
+	// Exception in submission
+	Exception SubmissionStatus = 6
+	// RunnerError means the runner failed to run it
+	RunnerError SubmissionStatus = 7
 )
 
 func (s SubmissionStatus) String() string {

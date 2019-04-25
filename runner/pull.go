@@ -9,14 +9,14 @@ import (
 	"github.com/docker/docker/api/types"
 )
 
-type PullProgress struct {
+type pullProgress struct {
 	Current int `json:"current"`
 	Total   int `json:"total"`
 }
 
-type PullResponse struct {
+type pullResponse struct {
 	Status         string       `json:"status"`
-	ProgressDetail PullProgress `json:"progressDetail"`
+	ProgressDetail pullProgress `json:"progressDetail"`
 	Progress       string       `json:"progress"`
 	ID             string       `json:"id"`
 }
@@ -36,7 +36,7 @@ func (d *DockerClient) Pull(image string) error {
 	needsNewline := false
 	decoder := json.NewDecoder(pullStats)
 	for decoder.More() {
-		var progress PullResponse
+		var progress pullResponse
 		decoder.Decode(&progress)
 
 		switch progress.Status {

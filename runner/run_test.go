@@ -20,7 +20,7 @@ func TestCanDetectFileType(t *testing.T) {
 
 var cli *DockerClient
 
-const TEST_FILES = "test-files"
+const TestFiles = "test-files"
 
 func RunTestCase(t *testing.T, testFile string, expected SubmissionStatus) {
 	if cli == nil {
@@ -33,10 +33,10 @@ func RunTestCase(t *testing.T, testFile string, expected SubmissionStatus) {
 			cli: apiClient,
 		}
 
-		loadLanguages(*cli)
+		loadLanguages(cli)
 	}
 
-	result, err := Test(*cli, TEST_FILES+"/0", testFile, filepath.Join(TEST_FILES, "/problem"))
+	result, err := Test(cli, TestFiles+"/0", testFile, filepath.Join(TestFiles, "/problem"))
 	if err != nil {
 		t.Error(err)
 	}

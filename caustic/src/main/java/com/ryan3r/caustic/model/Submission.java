@@ -52,7 +52,8 @@ public class Submission {
         OK,
         WRONG,
         TIME_LIMIT,
-        EXCEPTION
+        EXCEPTION,
+        RUNNER_ERROR
     }
 
     /**
@@ -153,6 +154,8 @@ public class Submission {
                 return "Running";
             case OK:
                 return "Accepted";
+            case RUNNER_ERROR:
+                return "Internal Error";
             default:
                 return "Wrong Answer";
         }

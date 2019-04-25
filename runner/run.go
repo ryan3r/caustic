@@ -20,10 +20,13 @@ import (
 )
 
 var (
-	languageDefs       map[string]*LanguageDef
+	languageDefs map[string]*LanguageDef
+	// ErrUnknownFileType means the filetype is unknown
 	ErrUnknownFileType = errors.New("Unknown filetype")
+	// ErrExitStatusError is for non-zero exit statuses
 	ErrExitStatusError = errors.New("Program exited with non-zero exit status")
-	ErrTimeLimit       = errors.New("Program took too long to run")
+	// ErrTimeLimit is for time limit exceeded
+	ErrTimeLimit = errors.New("Program took too long to run")
 )
 
 // LanguageDef defines how to handle a file type
