@@ -1,5 +1,8 @@
 package com.ryan3r.caustic.controller;
 
+import java.util.NoSuchElementException;
+
+import com.ryan3r.caustic.model.Submission;
 import com.ryan3r.caustic.model.accounts;
 import com.ryan3r.caustic.repository.SubmissionRepository;
 import com.ryan3r.caustic.repository.accountsRepository;
@@ -40,10 +43,15 @@ public class PageController {
         return "profile";
     }
 
-    //TODO: Pull from Submission or submits
     @GetMapping("/results/{id}")
     public String results(@PathVariable("id") String id, Model model) {
-        model.addAttribute("result", submissions.findById(Long.parseLong(id)));
+        Submission submit = null;
+        try {
+            submit = submissions.findById(Long.parseLong(id)).get();
+        } catch(NoSuchElementException ex) {
+            model.addAttribute("error", "Submission not found");
+        }
+        model.addAttribute("result", submit);
         return "results";
     }
 

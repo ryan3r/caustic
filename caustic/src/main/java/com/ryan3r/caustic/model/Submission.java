@@ -21,9 +21,10 @@ public class Submission {
      * @param problem The name of the problem this submission solves
      * @param fileName The name of the submission file in /mnt/submissions
      */
-    public Submission(String _problem, String _fileName) {
+    public Submission(String _problem, String _fileName, String _submitter) {
         problem = _problem;
         fileName = _fileName;
+        submitter = _submitter;
         status = SubmissionStatus.NEW;
     }
 
@@ -39,6 +40,9 @@ public class Submission {
 
     @NonNull
     String problem;
+
+    @NonNull
+    String submitter;
 
     // The status/result of a submission
     public enum SubmissionStatus {
@@ -168,5 +172,33 @@ public class Submission {
             default:
                 return "/wrong.png";
         }
+    }
+
+    /**
+     * Get the time taken to solve this problem
+     */
+    public String getTimeToSolve() {
+        return "TODO";
+    }
+
+    /**
+     * Get the score for this submission
+     */
+    public String getScore() {
+        return "TODO";
+    }
+
+    /**
+     * Get the name of the user who submitted this
+     */
+    public String getSubmitter() {
+        return submitter;
+    }
+
+    /**
+     * Set the name of the user who submitted this
+     */
+    public void setSubmitter(String name) {
+        submitter = name;
     }
 }

@@ -21,7 +21,7 @@ public class submitsController {
 	
 	@PostMapping("/submit")
 	public RedirectView uploadMapServer(@RequestParam("problemId") String problemId, @RequestParam("upload") MultipartFile file) throws IOException {
-		Submission submission = new Submission(problemId, file.getOriginalFilename());
+		Submission submission = new Submission(problemId, file.getOriginalFilename(), "TODO");
 		submission = repo.save(submission);
 		String id = "" + submission.getSubmissionId();
 

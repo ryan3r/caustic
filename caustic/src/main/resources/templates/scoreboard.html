@@ -57,13 +57,18 @@
        </tr>
        <tr th:each="score : ${scores}">
            <td><em th:text="${score.submissionId}"></em></td>
-           <!-- <td th:text="${score.teamName}"></td> --> <td>Username placeholder</td>
+           <td th:text="${score.submitter}"></td>
            <td><img th:attr="src=${score.statusImage}"/></td>
-           <!-- <td th:text="${score.timeToSolve}"></td> --> <td>Solution time placeholder</td>
-           <!-- <td th:text="${score.score}"></td> --> <td>Score placeholder</td>
+           <td th:text="${score.timeToSolve}"></td>
+           <td th:text="${score.score}"></td>
        </tr>
     </tbody>
 </table>
 
+<script>
+    setTimeout(function() {
+        location.reload();
+    }, 15000);
+</script>
 </body>
 </html>

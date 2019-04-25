@@ -1,163 +1,12 @@
 <!DOCTYPE html>
 <html lang="en"  xmlns:th="http://www.thymeleaf.org">
-
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?autoload=true&amp;skin=sunburst&amp;lang=java" defer=""></script><head>
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js?autoload=true&skin=sunburst&lang=java" defer=""></script>
     <meta charset="UTF-8">
     <title>Results</title>
-    <style>
-        .card {
-            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-            max-width: 70%;
-            margin-left: 15%;
-            margin-right: 15%;
-        }
-        h1 {
-            text-align: center;
-        }
-        h3 {
-            text-align: center;
-            padding-left: 10px;
-        }
-        img {
-            margin-left: 49%;
-            margin-right: 50%;
-        }
-        p {
-            text-align: center;
-        }
-        .pre-scrollable {
-            max-height: 340px;
-            overflow-y: scroll;
-        }
-        .pln {
-            color: rgba(0, 0, 0, 0.98);
-        }
-        pre.prettyprint {
-            background: #ffffff;
-            color: #516d7b;
-            font-family: Menlo, Consolas, "Bitstream Vera Sans Mono", "DejaVu Sans Mono", Monaco, monospace;
-            font-size: 12px;
-            line-height: 1.5;
-            border: 1px solid #161b1d;
-            padding: 10px;
-            /* border-radius: 3px; */
-        }
-        @media screen {
-            /* string content */
-            .str {
-                color: #568c3b;
-            }
-
-            /* a keyword */
-            .kwd {
-                color: #6b6bb8;
-            }
-
-            /* a comment */
-            .com {
-                color: #5a7b8c;
-            }
-
-            /* a type name */
-            .typ {
-                color: #257fad;
-            }
-
-            /* a literal value */
-            .lit {
-                color: #935c25;
-            }
-
-            /* punctuation */
-            .pun {
-                color: #ebf8ff;
-            }
-
-            /* lisp open bracket */
-            .opn {
-                color: #ebf8ff;
-            }
-
-            /* lisp close bracket */
-            .clo {
-                color: #ebf8ff;
-            }
-
-            /* a markup tag name */
-            .tag {
-                color: #d22d72;
-            }
-
-            /* a markup attribute name */
-            .atn {
-                color: #935c25;
-            }
-
-            /* a markup attribute value */
-            .atv {
-                color: #2d8f6f;
-            }
-
-            /* a declaration */
-            .dec {
-                color: #935c25;
-            }
-
-            /* a variable name */
-            .var {
-                color: #d22d72;
-            }
-
-            /* a function name */
-            .fun {
-                color: #257fad;
-            }
-        }
-        @media print, projection {
-            .str {
-                color: #006600;
-            }
-
-            .kwd {
-                color: #006;
-                font-weight: bold;
-            }
-
-            .com {
-                color: #600;
-                font-style: italic;
-            }
-
-            .typ {
-                color: #404;
-                font-weight: bold;
-            }
-
-            .lit {
-                color: #004444;
-            }
-
-            .pun, .opn, .clo {
-                color: #444400;
-            }
-
-            .tag {
-                color: #006;
-                font-weight: bold;
-            }
-
-            .atn {
-                color: #440044;
-            }
-
-            .atv {
-                color: #006600;
-            }
-        }
-
-    </style>
+    <link rel="stylesheet" href="/results.css"/>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -182,52 +31,22 @@
 <h1><u>Results:</u></h1>
 <br>
 <div class="card">
-<div class="pre-scrollable"><pre class="prettyprint"><code>
-<!--  TODO: Figure out if this is possible, and if so add language to above code tag and pull from submits or Submission  -->
-<!--  <span th:text="${Results.code}"></span>  -->
-package main.java.com.zach.caustic.controller;
-
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
-@Controller
-public class CausticController {
-    @GetMapping("/profile")
-    public String profile(Model model,
-                          @RequestParam(value="firstName", required=false, defaultValue="Zach") String firstName,
-                          @RequestParam(value="lastName", required=false, defaultValue="Gorman") String lastName,
-                          @RequestParam(value="email", required=false, defaultValue="zgorman2@iastate.edu") String email,
-                          @RequestParam(value="rank", required=false, defaultValue="") int rank) {
-
-            model.addAttribute("firstName", firstName);
-            model.addAttribute("lastName", lastName);
-            model.addAttribute("email", email);
-            model.addAttribute("rank", rank);
-
-            return "profile";
-    }
-
-    @GetMapping("/results")
-    public String results(Model model, @RequestParam(value="result", required=false, defaultValue="fail") String result) {
-        model.addAttribute("result", result);
-        return "results";
-    }
-}
-</code></pre></div></div>
+<div class="pre-scrollable">
+    <pre class="prettyprint"><code th:text="${result?.content}"></code></pre>
+</div>
+</div>
 <h3><u>Result:</u></h3>
-<img src="/correct.png" alt="correct">
+<p><img th:attr="src=${result?.statusImage}" id="result-img"/></p>
+<p th:text="${result?.statusText}"></p>
 <br>
 <h3><u>Score:</u></h3>
-<!--<p><span th:text="${Results.score}"></span></p>-->
-<p>17 of 23</p>
+<p th:text="${result?.score}"></p>
 <script>
-    jQuery(document).ready(
-        function()
-        {
-            prettyPrint();
-        });
+    if(document.querySelector("#result-img").getAttribute("src") == "/loading.gif") {
+        setTimeout(function() {
+            location.reload();
+        }, 3000);
+    }
 </script>
 </body>
 </html>
