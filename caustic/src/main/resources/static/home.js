@@ -10,7 +10,6 @@ function validate() {
     const URL = '/accountsLogin';
     if (usrname.length < 16 && letNum.test(usrname) && pssword.length > 5 && letNum.test(pssword)) {
         var obj = {username: usrname, password: pssword};
-        var jsonData = JSON.stringify(obj);
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.open("POST", URL, true);
         xmlhttp.setRequestHeader("Content-Type", "application/json");
@@ -48,7 +47,6 @@ function create() {
     var usrname = document.getElementById("username2").value;
     var pssword = document.getElementById("password2").value;
     var acc = document.getElementById("actType").value;
-    var pswdVer = document.getElementById("pswdVerify").value;
     let letNum = new RegExp("^[0-9a-zA-Z]+$");
     const URL = '/accounts';
     var tomorrow = new Date();
