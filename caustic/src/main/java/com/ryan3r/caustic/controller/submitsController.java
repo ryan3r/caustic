@@ -2,7 +2,6 @@ package com.ryan3r.caustic.controller;
 
 import com.ryan3r.caustic.model.Submission;
 import com.ryan3r.caustic.repository.SubmissionRepository;
-import com.ryan3r.caustic.repository.submitsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,8 +19,8 @@ public class submitsController {
 	SubmissionRepository repo;
 	
 	@PostMapping("/submit")
-	public String uploadMapServer(@RequestParam("upload") MultipartFile file) throws IOException {
-		Submission submission = new Submission("1", file.getOriginalFilename());
+	public String uploadMapServer(@RequestParam("problemId") String problemId, @RequestParam("upload") MultipartFile file) throws IOException {
+		Submission submission = new Submission(problemId, file.getOriginalFilename());
 		submission = repo.save(submission);
 		String id = "" + submission.getSubmissionId();
 
@@ -31,7 +30,7 @@ public class submitsController {
 			f.mkdirs();
 		}
 		
-		File fNew = Paths.get("/mnt/submissions/", id, file.getOriginalFilename()).toFile();
+		File fNew = submission.getFile();
 		fNew.createNewFile();
 		FileOutputStream fout = new FileOutputStream(fNew);
 		fout.write(file.getBytes());

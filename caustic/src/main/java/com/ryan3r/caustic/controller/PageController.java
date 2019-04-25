@@ -1,8 +1,8 @@
 package com.ryan3r.caustic.controller;
 
 import com.ryan3r.caustic.model.accounts;
+import com.ryan3r.caustic.repository.SubmissionRepository;
 import com.ryan3r.caustic.repository.accountsRepository;
-import com.ryan3r.caustic.repository.submitsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -17,12 +17,12 @@ public class PageController {
     String appName;
 
     private final accountsRepository accRep;
-    private final submitsRepository subRep;
+    @Autowired
+    private SubmissionRepository submissions;
 
     @Autowired
-    public PageController(accountsRepository accRep, submitsRepository subRep){
+    public PageController(accountsRepository accRep){
         this.accRep = accRep;
-        this.subRep = subRep;
     }
 
     @GetMapping(path="/")
@@ -50,7 +50,7 @@ public class PageController {
     //TODO: Is this right? Submission or submits?
     @GetMapping("/scoreboard")
     public String scoreboard(Model model){
-        model.addAttribute("scores", subRep.findAll());
+        model.addAttribute("scores", submissions.findAll());
         return "scoreboard";
     }
 

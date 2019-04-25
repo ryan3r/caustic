@@ -44,7 +44,7 @@ type Submission struct {
 	ID       int64
 	Status   SubmissionStatus
 	FileName string
-	Problem  int64
+	Problem  string
 	db       *sql.DB
 }
 
@@ -53,8 +53,12 @@ func getNextSubmission(db *sql.DB) (*Submission, error) {
 		db: db,
 	}
 
+	var ID int64
+
 	err := db.QueryRow("SELECT submission_id, status, file_name, problem FROM submission WHERE status = 'new' LIMIT 1").
-		Scan(&submission.ID, &submission.Status, &submission.FileName, &submission.Problem)
+		Scan(&ID, &submission.Status, &submission.FileName, &submission.Problem)
+
+	submission.ID = ID
 
 	if err == sql.ErrNoRows {
 		err = nil

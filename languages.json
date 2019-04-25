@@ -1,0 +1,18 @@
+{
+    "java": {
+		"image": "openjdk:13-jdk-alpine",
+		"compile": ["javac", "%f"],
+		"run": ["java", "%n"],
+		"artifacts": ["%n.class"]
+	},
+	"cpp": {
+		"image": "ryan3r/cpp",
+	    "compile": ["g++", "%f", "-o", "%n"],
+		"run": ["./%n"],
+		"artifacts": ["%n"]
+	},
+	"py": {
+		"image": "python:3-alpine",
+		"run": ["python", "%f"]
+	}
+}

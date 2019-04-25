@@ -1,5 +1,9 @@
 package com.ryan3r.caustic.model;
 
+import java.io.File;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Paths;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -15,11 +19,11 @@ public class Submission {
      * Create a new submission
      * @param problem The name of the problem this submission solves
      * @param fileName The name of the submission file in /mnt/submissions
-     * @param className The name to use when running a file
      */
     public Submission(String _problem, String _fileName) {
         problem = _problem;
         fileName = _fileName;
+        status = SubmissionStatus.NEW;
     }
 
     @Id
@@ -100,5 +104,17 @@ public class Submission {
      */
     public void setProblem(String problem) {
         this.problem = problem;
+    }
+
+    /**
+     * Get the submission the user uploaded
+     */
+    public File getFile() {
+        try {
+            return Paths.get("/mnt/submissions/", submissionId + "", fileName).toFile();
+        } catch(InvalidPathException ex) {
+            ex.printStackTrace();
+            return null;
+        }
     }
 }

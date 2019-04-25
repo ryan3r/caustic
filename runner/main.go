@@ -21,6 +21,8 @@ const (
 	RecoveryTime = 5 * time.Second
 	// PollingInterval is the cool down interval for when we run out of submissions to claim
 	PollingInterval = 3 * time.Second
+	// Version is our current version
+	Version = "1.0"
 )
 
 // Load the language config and pull the language images
@@ -28,11 +30,13 @@ func loadLanguages(cli DockerClient) {
 	langFile, err := ioutil.ReadFile("languages.json")
 	if err != nil {
 		fmt.Printf("Failed to open laugage definitions: %s\n", err)
+		os.Exit(127)
 	}
 
 	languageDefs = make(map[string]*LanguageDef)
 	if err := json.Unmarshal(langFile, &languageDefs); err != nil {
 		fmt.Println("Failed to parse languages")
+		os.Exit(127)
 	}
 
 	fmt.Println("Pulling language images")
@@ -78,7 +82,7 @@ func updateStatus(submission *Submission, status SubmissionStatus) {
 }
 
 func main() {
-	fmt.Println("Caustic runner (--COMMIT-HASH-HERE--)")
+	fmt.Printf("Caustic runner v%s (--COMMIT-HASH-HERE--)\n", Version)
 
 	apiClient, err := client.NewClientWithOpts(client.WithVersion("1.39"))
 	if err != nil {
@@ -125,7 +129,7 @@ func main() {
 		fmt.Println("Running submission", submission.ID)
 
 		strID := fmt.Sprintf("%v", submission.ID)
-		status, err := Test(cli, filepath.Join(submissions, strID), submission.FileName, filepath.Join(problems, strID))
+		status, err := Test(cli, filepath.Join(submissions, strID), submission.FileName, filepath.Join(problems, submission.Problem))
 		if err != nil {
 			fmt.Printf("Error testing submission: %v (%s)\n", submission.ID, err)
 
