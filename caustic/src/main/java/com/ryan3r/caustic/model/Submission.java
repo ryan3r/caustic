@@ -9,7 +9,7 @@ import org.springframework.lang.NonNull;
 
 @Entity
 public class Submission {
-    Submission() {}
+    public Submission() {}
 
     /**
      * Create a new submission
@@ -17,7 +17,7 @@ public class Submission {
      * @param fileName The name of the submission file in /mnt/submissions
      * @param className The name to use when running a file
      */
-    Submission(String _problem, String _fileName) {
+    public Submission(String _problem, String _fileName) {
         problem = _problem;
         fileName = _fileName;
     }
@@ -44,5 +44,61 @@ public class Submission {
         WRONG,
         TIME_LIMIT,
         EXCEPTION
+    }
+
+    /**
+     * @return the submissionId
+     */
+    public long getSubmissionId() {
+        return submissionId;
+    }
+
+    /**
+     * @param submissionId the submissionId to set
+     */
+    public void setSubmissionId(long submissionId) {
+        this.submissionId = submissionId;
+    }
+
+    /**
+     * @return the status
+     */
+    public SubmissionStatus getStatus() {
+        return status;
+    }
+
+    /**
+     * @param status the status to set
+     */
+    public void setStatus(SubmissionStatus status) {
+        this.status = status;
+    }
+
+    /**
+     * @return the fileName
+     */
+    public String getFileName() {
+        return fileName;
+    }
+
+    /**
+     * @param fileName the fileName to set
+     */
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    /**
+     * @return the problem
+     */
+    public String getProblem() {
+        return problem;
+    }
+
+    /**
+     * @param problem the problem to set
+     */
+    public void setProblem(String problem) {
+        this.problem = problem;
     }
 }
