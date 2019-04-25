@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -19,7 +20,7 @@ public class submitsController {
 	SubmissionRepository repo;
 	
 	@PostMapping("/submit")
-	public String uploadMapServer(@RequestParam("problemId") String problemId, @RequestParam("upload") MultipartFile file) throws IOException {
+	public RedirectView uploadMapServer(@RequestParam("problemId") String problemId, @RequestParam("upload") MultipartFile file) throws IOException {
 		Submission submission = new Submission(problemId, file.getOriginalFilename());
 		submission = repo.save(submission);
 		String id = "" + submission.getSubmissionId();
@@ -36,6 +37,6 @@ public class submitsController {
 		fout.write(file.getBytes());
 		fout.close();
 
-		return "Ok";
+		return new RedirectView("/results/" + submission.getSubmissionId());
 	}
 }

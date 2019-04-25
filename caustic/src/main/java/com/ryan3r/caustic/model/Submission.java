@@ -1,6 +1,7 @@
 package com.ryan3r.caustic.model;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 
@@ -115,6 +116,57 @@ public class Submission {
         } catch(InvalidPathException ex) {
             ex.printStackTrace();
             return null;
+        }
+    }
+
+    /**
+     * Get the content of the submission
+     * @return
+     */
+    public String getContent() {
+        try {
+            return new String(Files.readAllBytes(Paths.get("/mnt/submissions/", submissionId + "", fileName)));
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            return "";
+        }
+    }
+
+    /**
+     * Submission status as a string
+     */
+    public String getStatusText() {
+        switch(status) {
+            case NEW:
+                return "New";
+            case TIME_LIMIT:
+                return "Time limit exceded";
+            case COMPILE_ERROR:
+                return "Compile Error";
+            case EXCEPTION:
+                return "Runtime Error";
+            case RUNNING:
+                return "Running";
+            case OK:
+                return "Accepted";
+            default:
+                return "Wrong Answer";
+        }
+    }
+
+    /**
+     * Get a wrong, right or loading image
+     * @return
+     */
+    public String getStatusImage() {
+        switch(status) {
+            case NEW:
+            case RUNNING:
+                return "/loading.gif";
+            case OK:
+                return "/correct.png";
+            default:
+                return "/wrong.png";
         }
     }
 }

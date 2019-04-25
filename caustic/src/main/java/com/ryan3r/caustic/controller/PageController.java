@@ -41,13 +41,12 @@ public class PageController {
     }
 
     //TODO: Pull from Submission or submits
-    @GetMapping("/results")
-    public String results(Model model) {
-        //model.addAttribute("result", result);
+    @GetMapping("/results/{id}")
+    public String results(@PathVariable("id") String id, Model model) {
+        model.addAttribute("result", submissions.findById(Long.parseLong(id)));
         return "results";
     }
 
-    //TODO: Is this right? Submission or submits?
     @GetMapping("/scoreboard")
     public String scoreboard(Model model){
         model.addAttribute("scores", submissions.findAll());
