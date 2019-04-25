@@ -20,13 +20,15 @@ const (
 	// RecoveryTime to wait between pings or errors returned by the db
 	RecoveryTime = 5 * time.Second
 	// PollingInterval is the cool down interval for when we run out of submissions to claim
-	PollingInterval = 3 * time.Second
+	PollingInterval = 1 * time.Second
 	// Version is our current version
 	Version = "1.0"
+	// RunnerCount is the number runner workers in use
+	RunnerCount = 5
 )
 
 // Load the language config and pull the language images
-func loadLanguages(cli DockerClient) {
+func loadLanguages(cli *DockerClient) {
 	langFile, err := ioutil.ReadFile("languages.json")
 	if err != nil {
 		fmt.Printf("Failed to open laugage definitions: %s\n", err)
@@ -47,7 +49,7 @@ func loadLanguages(cli DockerClient) {
 }
 
 // Connect to the database
-func connectDb(cli DockerClient) *sql.DB {
+func connectDb() *sql.DB {
 	dbURL, ok := os.LookupEnv("MYSQL_URL")
 	if !ok {
 		dbURL = "root:password@tcp(localhost:3307)/caustic"
@@ -81,37 +83,8 @@ func updateStatus(submission *Submission, status SubmissionStatus) {
 	}
 }
 
-func main() {
-	fmt.Printf("Caustic runner v%s (--COMMIT-HASH-HERE--)\n", Version)
-
-	apiClient, err := client.NewClientWithOpts(client.WithVersion("1.39"))
-	if err != nil {
-		fmt.Printf("Failed to connect to docker: %s\n", err)
-		fmt.Println("Make sure you have docker installed and it is running")
-		os.Exit(127)
-	}
-
-	cli := DockerClient{
-		ctx: context.Background(),
-		cli: apiClient,
-	}
-
-	loadLanguages(cli)
-	db := connectDb(cli)
-
-	submissions, err := filepath.Abs("submissions")
-	if err != nil {
-		fmt.Printf("Error getting submissions path: %s\n", err)
-		os.Exit(127)
-	}
-	problems, err := filepath.Abs("problems")
-	if err != nil {
-		fmt.Printf("Error getting problems path: %s\n", err)
-		os.Exit(127)
-	}
-
-	// Start testing submissions
-	fmt.Println("Connected\nWaiting for submissions")
+// A goroutine for claiming submissions
+func claimSubmissions(db *sql.DB, submissionC chan *Submission) {
 	for {
 		submission, err := ClaimSubmission(db)
 		if err != nil {
@@ -126,6 +99,14 @@ func main() {
 			continue
 		}
 
+		submissionC <- submission
+	}
+}
+
+// A goroutine for running submissions
+func runSubmissions(cli *DockerClient, submissions, problems string, submissionC chan *Submission) {
+	for {
+		submission := <-submissionC
 		fmt.Println("Running submission", submission.ID)
 
 		strID := fmt.Sprintf("%v", submission.ID)
@@ -140,4 +121,45 @@ func main() {
 		fmt.Printf("Submission status %v: %s\n", submission.ID, status)
 		updateStatus(submission, status)
 	}
+}
+
+func main() {
+	fmt.Printf("Caustic runner v%s (--COMMIT-HASH-HERE--)\n", Version)
+
+	apiClient, err := client.NewClientWithOpts(client.WithVersion("1.39"))
+	if err != nil {
+		fmt.Printf("Failed to connect to docker: %s\n", err)
+		fmt.Println("Make sure you have docker installed and it is running")
+		os.Exit(127)
+	}
+
+	cli := &DockerClient{
+		ctx: context.Background(),
+		cli: apiClient,
+	}
+
+	loadLanguages(cli)
+	db := connectDb()
+
+	submissions, err := filepath.Abs("submissions")
+	if err != nil {
+		fmt.Printf("Error getting submissions path: %s\n", err)
+		os.Exit(127)
+	}
+	problems, err := filepath.Abs("problems")
+	if err != nil {
+		fmt.Printf("Error getting problems path: %s\n", err)
+		os.Exit(127)
+	}
+
+	// Start testing submissions
+	fmt.Println("Connected\nWaiting for submissions")
+
+	submissionC := make(chan *Submission)
+
+	for i := 0; i < RunnerCount; i++ {
+		go runSubmissions(cli, submissions, problems, submissionC)
+	}
+
+	claimSubmissions(db, submissionC)
 }

@@ -52,7 +52,7 @@ func expandTemplate(template []string, fileName, name string) []string {
 }
 
 // Compile a file
-func Compile(cli DockerClient, problemDir, fileName string) error {
+func Compile(cli *DockerClient, problemDir, fileName string) error {
 	name, ft := detectType(fileName)
 	def := languageDefs[ft]
 
@@ -95,7 +95,7 @@ type Runner struct {
 }
 
 // NewRunner creates the container for running tests
-func NewRunner(cli DockerClient, problemDir, fileName string, timeLimit time.Duration) (*Runner, error) {
+func NewRunner(cli *DockerClient, problemDir, fileName string, timeLimit time.Duration) (*Runner, error) {
 	_, ft := detectType(fileName)
 	def := languageDefs[ft]
 
@@ -152,7 +152,7 @@ func (r *Runner) Close() error {
 }
 
 // Test will compile, run and check a program
-func Test(cli DockerClient, problemDir, fileName, solutionDir string) (SubmissionStatus, error) {
+func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (SubmissionStatus, error) {
 	defer cleanUpArtifacts(problemDir, fileName)
 
 	// Compile the solution
@@ -240,7 +240,7 @@ type DockerClient struct {
 
 // Container is an abstraction of a docker container
 type Container struct {
-	Docker         DockerClient
+	Docker         *DockerClient
 	ID             string
 	Image          string
 	Cmd            []string
