@@ -3,6 +3,7 @@ package com.ryan3r.caustic.controller;
 import com.ryan3r.caustic.model.Submission;
 import com.ryan3r.caustic.repository.SubmissionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,17 +18,19 @@ import java.nio.file.Paths;
 @RestController
 public class submitsController {
 	@Autowired
-	SubmissionRepository repo;
+	SubmissionRepository submissions;
 	
 	@PostMapping("/submit")
-	public RedirectView uploadMapServer(@RequestParam("problemId") String problemId, @RequestParam("upload") MultipartFile file) throws IOException {
+	public RedirectView uploadMapServer(@RequestParam("problemId") String problemId,
+										@RequestParam("upload") MultipartFile file,
+										@CookieValue("username") String username) throws IOException {
 		// No such problem
 		if(problemId.length() == 0 || !Paths.get("/mnt/problems", problemId).toFile().exists() || file.isEmpty()) {
 			return new RedirectView("/formUpload");
 		}
 
-		Submission submission = new Submission(problemId, file.getOriginalFilename(), "TODO");
-		submission = repo.save(submission);
+		Submission submission = new Submission(problemId, file.getOriginalFilename(), username);
+		submission = submissions.save(submission);
 		String id = "" + submission.getSubmissionId();
 
 		File f = Paths.get("/mnt/submissions/", id).toFile();
