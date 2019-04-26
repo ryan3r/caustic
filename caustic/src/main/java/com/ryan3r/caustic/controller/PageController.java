@@ -68,7 +68,7 @@ public class PageController {
 
     @GetMapping("/login-newaccount")
     public String login(Model model){
-        return "home";
+        return "login";
     }
 
     @GetMapping("/formUpload")
