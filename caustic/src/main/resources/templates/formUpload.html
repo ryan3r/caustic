@@ -9,7 +9,7 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </head>
-<body style="text-align: center;">
+<body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="/">C.A.U.S.T.I.C</a>
     <!--  Hamburger button for if site is accessed on mobile :)  -->
@@ -28,22 +28,29 @@
 </nav>
 <br>
 
-<h1>
-    File Upload
-</h1>
-<form id="uploadFile" action="/submit" method="post" enctype="multipart/form-data">
-    <fieldset>
-        <p>
-            <label for="upload">File to Upload</label>
-            <input id="upload" name="upload" type = "file" /><br/>
-            <input type="number" name="problemId" placeholder="Problem id"/>
-        </p>
-        <p>
-            <input type="submit" id="submit" name="submit" value="Submit"/>
-        </p>
+<div class="container" th:if="${invalid}">
+    <div class="alert alert-danger">
+        The problem you entered does not exist or you forgot to add a file
+    </div>
+</div>
+<div style="text-align: center;">
+    <h1>
+        File Upload
+    </h1>
+    <form id="uploadFile" action="/submit" method="post" enctype="multipart/form-data">
+        <fieldset>
+            <p>
+                <label for="upload">File to Upload</label>
+                <input id="upload" name="upload" type = "file" /><br/>
+                <input type="number" name="problemId" placeholder="Problem id"/>
+            </p>
+            <p>
+                <input type="submit" id="submit" name="submit" value="Submit"/>
+            </p>
 
-    </fieldset>
-    <script src="formUpload.js"></script>
-</form>
+        </fieldset>
+        <script src="formUpload.js"></script>
+    </form>
+</div>
 </body>
 </html>

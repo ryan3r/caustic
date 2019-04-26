@@ -23,7 +23,7 @@ public class submitsController {
 	public RedirectView uploadMapServer(@RequestParam("problemId") String problemId, @RequestParam("upload") MultipartFile file) throws IOException {
 		// No such problem
 		if(problemId.length() == 0 || !Paths.get("/mnt/problems", problemId).toFile().exists() || file.isEmpty()) {
-			return new RedirectView("/formUpload");
+			return new RedirectView("/formUpload?invalid=true");
 		}
 
 		Submission submission = new Submission(problemId, file.getOriginalFilename(), "TODO");
