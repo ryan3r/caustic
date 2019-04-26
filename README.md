@@ -31,3 +31,8 @@ docker-compose down
 ```
 docker-compose down -v
 ```
+
+# Better build
+```
+DOCKER_BUILDKIT=1 docker build -t ryan3r/caustic caustic -f caustic/buildkit.Dockerfile
+```
