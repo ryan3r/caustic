@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -20,6 +21,7 @@ public class PageController {
     String appName;
 
     private final accountsRepository accRep;
+
     @Autowired
     private SubmissionRepository submissions;
 
@@ -35,8 +37,8 @@ public class PageController {
     }
 
     //TODO: Change this to cookie, and save user as cookie if we want user to see their page
-    @GetMapping("/profile/{username}")
-    public String profile(@PathVariable("username") String username, Model model) {
+    @GetMapping("/profile")
+    public String profile(@CookieValue("username") String username, Model model) {
 
         accounts account = accRep.findUser(username);
         model.addAttribute("account", account);
