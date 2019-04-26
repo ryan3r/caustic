@@ -1,6 +1,7 @@
 var attempt = 3; // Variable to count number of attempts.
 // Below function Executes on click of login button.
-function validate() {
+function validate(e) {
+    e.preventDefault();
     var usrname = document.getElementById("username").value;
     var pssword = document.getElementById("password").value;
     let letNum = new RegExp("^[0-9a-zA-Z]+$");
@@ -43,7 +44,8 @@ function validate() {
     }
 }
 
-function create() {
+function create(e) {
+    e.preventDefault();
     var usrname = document.getElementById("username2").value;
     var pssword = document.getElementById("password2").value;
     var acc = document.getElementById("actType").value;
@@ -79,3 +81,6 @@ function create() {
         alert("Account not created. Form not valid");
     }
 }
+
+document.querySelector("form").addEventListener("submit", 
+    document.querySelector("[data-isLogin]") ? validate : create);

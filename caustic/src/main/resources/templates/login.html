@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <title>Login/New Account</title>
-    <script src="home.js"></script>
     <meta name="viewport" content="width=device-width"/>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
@@ -21,7 +20,7 @@
             <li class="nav-item"><a class="nav-link" href="/scoreboard">Scoreboard</a></li>
             <li class="nav-item"><a class="nav-link" href="/profile">Profile</a></li>
             <li class="nav-item"><a class="nav-link" href="/accountSetup">Account Setup</a></li>
-            <li class="nav-item active"><a class="nav-link" href="/login-newaccount">Login / New Account</a></li>
+            <li class="nav-item active"><a class="nav-link" href="/login-newaccount">Login</a></li>
         </ul>
     </div>
 </nav>
@@ -35,9 +34,10 @@
             <input type="text" name="username" id="username"/>
             <label>Password :</label>
             <input type="password" name="password" id="password"/>
-            <input type="button" value="Login" id="submit" onclick="validate()"/>
+            <input type="submit" value="Login" id="submit" data-isLogin/>
         </form>
     </div>
 </div>
+<script src="home.js"></script>
 </body>
 </html>
