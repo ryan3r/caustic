@@ -10,6 +10,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+import com.ryan3r.caustic.CausticApplication;
+
 import org.springframework.lang.NonNull;
 
 @Entity
@@ -25,6 +27,8 @@ public class Submission {
         problem = _problem;
         fileName = _fileName;
         submitter = _submitter;
+        solutionTime = (System.currentTimeMillis() / 60000) - CausticApplication.contestStartTime; // time in minutes
+        rejections = 0;
         status = SubmissionStatus.NEW;
     }
 
@@ -43,6 +47,12 @@ public class Submission {
 
     @NonNull
     String submitter;
+
+    @NonNull
+    long solutionTime;
+
+    @NonNull
+    int rejections;
 
     // The status/result of a submission
     public enum SubmissionStatus {
@@ -180,15 +190,15 @@ public class Submission {
     /**
      * Get the time taken to solve this problem
      */
-    public String getTimeToSolve() {
-        return "TODO";
+    public long getTimeToSolve() {
+        return solutionTime;
     }
 
     /**
      * Get the score for this submission
      */
-    public String getScore() {
-        return "TODO";
+    public long getScore() {
+        return solutionTime + (rejections * 20);
     }
 
     /**
@@ -203,5 +213,33 @@ public class Submission {
      */
     public void setSubmitter(String name) {
         submitter = name;
+    }
+
+    /**
+     * @return the solutionTime
+     */
+    public long getSolutionTime() {
+        return solutionTime;
+    }
+
+    /**
+     * @param solutionTime the solutionTime to set
+     */
+    public void setSolutionTime(long solutionTime) {
+        this.solutionTime = solutionTime;
+    }
+
+    /**
+     * @return the rejections
+     */
+    public int getRejections() {
+        return rejections;
+    }
+
+    /**
+     * @param rejections the rejections to set
+     */
+    public void setRejections(int rejections) {
+        this.rejections = rejections;
     }
 }
