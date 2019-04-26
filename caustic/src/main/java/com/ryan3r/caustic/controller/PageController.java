@@ -1,7 +1,5 @@
 package com.ryan3r.caustic.controller;
 
-import java.util.NoSuchElementException;
-
 import com.ryan3r.caustic.model.Submission;
 import com.ryan3r.caustic.model.accounts;
 import com.ryan3r.caustic.repository.SubmissionRepository;
@@ -14,6 +12,8 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.NoSuchElementException;
 
 @Controller
 public class PageController {
@@ -37,7 +37,6 @@ public class PageController {
         return "index";
     }
 
-    //TODO: Change this to cookie, and save user as cookie if we want user to see their page
     @GetMapping("/profile")
     public String profile(@CookieValue("username") String username, Model model) {
 
