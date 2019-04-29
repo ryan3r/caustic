@@ -44,6 +44,8 @@ func (s SubmissionStatus) String() string {
 		return "Wrong"
 	case TimeLimit:
 		return "TimeLimitExceded"
+	case RunnerError:
+		return "RunnerError"
 	}
 	return "Exception"
 }

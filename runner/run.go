@@ -40,6 +40,9 @@ type LanguageDef struct {
 // Detect the filetype and name of file
 func detectType(fileName string) (string, string) {
 	idx := strings.LastIndex(fileName, ".")
+	if idx != -1 {
+		return fileName, ""
+	}
 	return fileName[:idx], fileName[idx+1:]
 }
 
@@ -163,18 +166,18 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 	if err == ErrExitStatusError {
 		return CompileError, nil
 	} else if err != nil {
-		return New, err
+		return RunnerError, err
 	}
 
 	// Run the submissions
 	tests, err := ioutil.ReadDir(solutionDir)
 	if err != nil {
-		return New, err
+		return RunnerError, err
 	}
 
 	runner, err := NewRunner(cli, problemDir, fileName, 3*time.Second)
 	if err != nil {
-		return New, err
+		return RunnerError, err
 	}
 	defer runner.Close()
 
@@ -187,7 +190,7 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 
 		fileIn, err := os.Open(filepath.Join(solutionDir, file.Name()))
 		if err != nil {
-			return New, err
+			return RunnerError, err
 		}
 		defer fileIn.Close()
 
@@ -199,14 +202,14 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 			} else if err == ErrTimeLimit {
 				return TimeLimit, nil
 			} else {
-				return New, err
+				return RunnerError, err
 			}
 		}
 
 		// Verify the output of the submission
 		outFile, err := ioutil.ReadFile(filepath.Join(solutionDir, name+".out"))
 		if err != nil {
-			return Ok, err
+			return RunnerError, err
 		}
 
 		expectedOut := strings.Trim(string(outFile), "\r\n\t ")
@@ -224,7 +227,7 @@ func cleanUpArtifacts(problemDir, fileName string) {
 	name, ft := detectType(fileName)
 	def := languageDefs[ft]
 
-	if def.Artifacts == nil {
+	if def == nil || def.Artifacts == nil {
 		return
 	}
 
