@@ -1,3 +1,5 @@
+.idea
+.git/
 *.class
 a.out
 runner/github.com
@@ -5,3 +7,4 @@ runner/github.com
 *.jar
 submissions
 log.txt
+caustic-macos
