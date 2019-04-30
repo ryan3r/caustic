@@ -194,28 +194,28 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 	// Compile the solution
 	err = Compile(cli, problemDir, fileName, logFile)
 	if err == ErrExitStatusError {
-		logFile.Write([]byte("Status: Compile Error"))
+		logFile.Write([]byte("Status: Compile Error\n"))
 		return CompileError, nil
 	} else if err != nil {
-		logFile.Write([]byte("Status: Runner error\nError: Failed to run the compiler container: " + err.Error()))
+		logFile.Write([]byte("Status: Runner error\nError: Failed to run the compiler container: " + err.Error() + "\n"))
 		return RunnerError, err
 	}
 
 	// Run the submissions
 	tests, err := ioutil.ReadDir(solutionDir)
 	if err != nil {
-		logFile.Write([]byte("Status: Runner error\nError: Failed to open solution directory: " + err.Error()))
+		logFile.Write([]byte("Status: Runner error\nError: Failed to open solution directory: " + err.Error() + "\n"))
 		return RunnerError, err
 	}
 
 	problemDef, err := loadProblem(problemDir)
 	if err != nil {
-		logFile.Write([]byte("Failed to open solution definition (using defaults): " + err.Error()))
+		logFile.Write([]byte("Failed to open solution definition (using defaults): " + err.Error() + "\n"))
 	}
 
 	runner, err := NewRunner(cli, problemDir, fileName, time.Duration(problemDef.Time)*time.Second)
 	if err != nil {
-		logFile.Write([]byte("Status: Runner error\nError: Failed to create runner container: " + err.Error()))
+		logFile.Write([]byte("Status: Runner error\nError: Failed to create runner container: " + err.Error() + "\n"))
 		return RunnerError, err
 	}
 	defer runner.Close()
@@ -231,7 +231,7 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 
 		fileIn, err := os.Open(filepath.Join(solutionDir, file.Name()))
 		if err != nil {
-			logFile.Write([]byte("Status: Runner error\nError: Failed to load input file " + file.Name() + ": " + err.Error()))
+			logFile.Write([]byte("Status: Runner error\nError: Failed to load input file " + file.Name() + ": " + err.Error() + "\n"))
 			return RunnerError, err
 		}
 		defer fileIn.Close()
@@ -240,10 +240,10 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 
 		if err := runner.Run(fileIn, outBuffer); err != nil {
 			if err == ErrExitStatusError {
-				logFile.Write([]byte("Status: Exception"))
+				logFile.Write([]byte("Status: Exception\n"))
 				return Exception, nil
 			} else if err == ErrTimeLimit {
-				logFile.Write([]byte("Status: Time Limit Exceeded"))
+				logFile.Write([]byte("Status: Time Limit Exceeded\n"))
 				return TimeLimit, nil
 			} else {
 				logFile.Write([]byte("Status: Runner error\nError: Failed to run submission:" + err.Error() + "\n"))
@@ -264,7 +264,7 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 		logFile.Write([]byte(solutionOut + "\n"))
 
 		if expectedOut != solutionOut {
-			logFile.Write([]byte("Status: Wrong Answer"))
+			logFile.Write([]byte("Status: Wrong Answer\n"))
 			return Wrong, nil
 		}
 	}
