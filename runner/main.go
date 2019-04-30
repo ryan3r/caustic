@@ -23,7 +23,7 @@ var (
 	// PollingInterval is the cool down interval for when we run out of submissions to claim
 	PollingInterval = flag.Int("poll", 1, "The number of seconds to wait between pulling submissions")
 	// Version is our current version
-	Version = "1.0"
+	Version = "1.1"
 	// RunnerCount is the number runner workers in use
 	RunnerCount = flag.Int("runners", 5, "The number of goroutines that run code")
 	// NoPullImages on startup

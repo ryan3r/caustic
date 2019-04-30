@@ -40,7 +40,7 @@ type LanguageDef struct {
 // Detect the filetype and name of file
 func detectType(fileName string) (string, string) {
 	idx := strings.LastIndex(fileName, ".")
-	if idx != -1 {
+	if idx == -1 {
 		return fileName, ""
 	}
 	return fileName[:idx], fileName[idx+1:]
@@ -108,7 +108,7 @@ func NewRunner(cli *DockerClient, problemDir, fileName string, timeLimit time.Du
 	testCtr := &Container{
 		Docker:     cli,
 		Image:      def.Image,
-		Cmd:        []string{"sleep", "100"},
+		Cmd:        []string{"sleep", "1000000000000"},
 		WorkingDir: "/mnt",
 		Out:        os.Stdout,
 		ReadOnly:   true,
@@ -143,12 +143,13 @@ func (r *Runner) Run(in io.Reader, out io.Writer) error {
 	}
 
 	exec.Run()
-	exec.StartKillTimer(r.timeLimit)
+	cancelTimer := exec.StartKillTimer(r.timeLimit)
 
 	err := <-exec.ExitC
 	if err == ErrTimeLimit {
 		r.container.Run()
 	}
+	cancelTimer <- true
 	return err
 }
 
@@ -353,16 +354,19 @@ type ContainerExec struct {
 }
 
 // StartKillTimer starts a timeout
-func (c *ContainerExec) StartKillTimer(timeout time.Duration) {
+func (c *ContainerExec) StartKillTimer(timeout time.Duration) chan bool {
+	exitC := make(chan bool, 1)
 	go func() {
 		timer := time.NewTimer(timeout)
 		select {
-		case <-c.ExitC:
+		case <-exitC:
+			timer.Stop()
 		case <-timer.C:
-			c.isTimerKill = true
+			c.ExitC <- ErrTimeLimit
 			c.Container.Kill()
 		}
 	}()
+	return exitC
 }
 
 // Run creates the exec, starts it and wires up the stdio
@@ -401,11 +405,6 @@ func (c *ContainerExec) Run() error {
 		info, err := docker.cli.ContainerExecInspect(docker.ctx, execID.ID)
 		if err != nil {
 			c.ExitC <- err
-			return
-		}
-
-		if c.isTimerKill {
-			c.ExitC <- ErrTimeLimit
 			return
 		}
 
