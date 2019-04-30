@@ -157,6 +157,11 @@ func main() {
 		fmt.Printf("Failed to load users csv: %s\n", err)
 	}
 
+	if err := InitDbLanguages(db); err != nil {
+		fmt.Printf("Failed to add languages to db: %s\n", err)
+		os.Exit(127)
+	}
+
 	submissions, err := filepath.Abs("submissions")
 	if err != nil {
 		fmt.Printf("Error getting submissions path: %s\n", err)

@@ -223,3 +223,30 @@ func InitDBUsers(db *sql.DB) error {
 
 	return tx.Commit()
 }
+
+// InitDbLanguages adds the languages to the db
+func InitDbLanguages(db *sql.DB) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	statement, err := tx.Prepare("INSERT INTO language (id, name) VALUES (?, ?)")
+	if err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec("DELETE FROM language"); err != nil {
+		return err
+	}
+
+	id := int64(1)
+	for name, _ := range languageDefs {
+		if _, err := statement.Exec(id, name); err != nil {
+			return err
+		}
+		id++
+	}
+
+	return tx.Commit()
+}

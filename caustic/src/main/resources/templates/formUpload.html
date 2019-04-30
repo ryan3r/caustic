@@ -42,7 +42,9 @@
             <p>
                 <label for="upload">File to Upload</label>
                 <input id="upload" name="upload" type = "file" /><br/>
-                <input id="type" name="type" placeholder="File type"/><br/>
+                <select name="type">
+                    <option th:each="type : ${types}" th:text="${type}"></option>
+                </select><br/><br/>
                 <input type="number" name="problemId" placeholder="Problem id"/>
             </p>
             <p>
@@ -50,7 +52,6 @@
             </p>
 
         </fieldset>
-        <script src="formUpload.js"></script>
     </form>
 </div>
 </body>
