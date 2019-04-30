@@ -2,6 +2,7 @@ package com.ryan3r.caustic.controller;
 
 import com.ryan3r.caustic.model.Submission;
 import com.ryan3r.caustic.model.accounts;
+import com.ryan3r.caustic.repository.LanguageRepository;
 import com.ryan3r.caustic.repository.SubmissionRepository;
 import com.ryan3r.caustic.repository.accountsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,8 @@ public class PageController {
 
     @Autowired
     private SubmissionRepository submissions;
+    @Autowired
+    private LanguageRepository languageRepository;
 
     @Autowired
     public PageController(accountsRepository accRep){
@@ -76,6 +79,7 @@ public class PageController {
     @GetMapping("/formUpload")
     public String formUpload(@RequestParam(value = "invalid", required = false) boolean invalid, Model model){
         model.addAttribute("invalid", invalid);
+        model.addAttribute("types", languageRepository.findAll());
         return "formUpload";
     }
 }

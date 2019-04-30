@@ -23,7 +23,6 @@ function validate(e) {
                 }
                 else
                 {
-                    alert("Login successfully");
                     document.cookie = "username=" + usrname + "; expires=" + tomorrow + "; path=/";
                     window.location.href = "formUpload";
                 }

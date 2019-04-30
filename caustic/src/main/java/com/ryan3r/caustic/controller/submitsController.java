@@ -22,6 +22,7 @@ public class submitsController {
 	
 	@PostMapping("/submit")
 	public RedirectView uploadMapServer(@RequestParam("problemId") String problemId,
+										@RequestParam("type") String type,
 										@RequestParam("upload") MultipartFile file,
 										@CookieValue("username") String username) throws IOException {
 		// No such problem
@@ -29,7 +30,7 @@ public class submitsController {
 			return new RedirectView("/formUpload?invalid=true");
 		}
 
-		Submission submission = new Submission(problemId, file.getOriginalFilename(), username);
+		Submission submission = new Submission(problemId, file.getOriginalFilename(), username, type);
 		submission = submissions.save(submission);
 		String id = "" + submission.getSubmissionId();
 

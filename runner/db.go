@@ -2,7 +2,12 @@ package main
 
 import (
 	"database/sql"
+	"encoding/csv"
 	"errors"
+	"fmt"
+	"io"
+	"os"
+	"regexp"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -30,6 +35,10 @@ const (
 	RunnerError SubmissionStatus = 7
 )
 
+var (
+	lettersNumbersExpr = regexp.MustCompile("^[0-9a-zA-Z]+$")
+)
+
 func (s SubmissionStatus) String() string {
 	switch s {
 	case New:
@@ -44,6 +53,8 @@ func (s SubmissionStatus) String() string {
 		return "Wrong"
 	case TimeLimit:
 		return "TimeLimitExceded"
+	case RunnerError:
+		return "RunnerError"
 	}
 	return "Exception"
 }
@@ -55,6 +66,7 @@ type Submission struct {
 	FileName  string
 	Problem   string
 	Submitter string
+	Type      sql.NullString
 	db        *sql.DB
 }
 
@@ -65,8 +77,8 @@ func getNextSubmission(db *sql.DB) (*Submission, error) {
 
 	var ID int64
 
-	err := db.QueryRow("SELECT submission_id, status, file_name, problem, submitter FROM submission WHERE status = 'new' LIMIT 1").
-		Scan(&ID, &submission.Status, &submission.FileName, &submission.Problem, &submission.Submitter)
+	err := db.QueryRow("SELECT submission_id, status, file_name, problem, submitter, type FROM submission WHERE status = 'new' LIMIT 1").
+		Scan(&ID, &submission.Status, &submission.FileName, &submission.Problem, &submission.Submitter, &submission.Type)
 
 	submission.ID = ID
 
@@ -140,4 +152,101 @@ func FindContainer(cli DockerClient, label string) (*types.ContainerJSON, error)
 	// Get the container info
 	ctr, err := cli.cli.ContainerInspect(cli.ctx, containers[0].ID)
 	return &ctr, err
+}
+
+// InitDBUsers loads the users csv into the db
+func InitDBUsers(db *sql.DB) error {
+	file, err := os.Open("users.csv")
+	if err != nil {
+		return err
+	}
+
+	reader := csv.NewReader(file)
+	var users [][]string
+
+	// Validate rows
+	for {
+		userRow, err := reader.Read()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		if len(userRow[0]) > 15 {
+			return fmt.Errorf("Username must be 15 chars or less (%s)", userRow[0])
+		}
+
+		if len(userRow[1]) <= 5 {
+			return fmt.Errorf("Password must be greater than 5 chars (%s)", userRow[1])
+		}
+
+		if !lettersNumbersExpr.Match([]byte(userRow[0])) {
+			return fmt.Errorf("Username can only contain letters and numbers (%s)", userRow[0])
+		}
+
+		if !lettersNumbersExpr.Match([]byte(userRow[1])) {
+			return fmt.Errorf("Password can only contain letters and numbers (%s)", userRow[1])
+		}
+
+		if userRow[2] != "comp" && userRow[2] != "admin" {
+			return fmt.Errorf("Account type must be either com or admin (%s)", userRow[2])
+		}
+
+		users = append(users, userRow)
+	}
+
+	fmt.Println("Clearing users table and adding from users.csv")
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec("DELETE FROM accounts"); err != nil {
+		return err
+	}
+
+	statement, err := tx.Prepare("INSERT INTO accounts (id, username, password, acc_type) VALUES (?, ?, ?, ?)")
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	id := int64(1)
+	for _, user := range users {
+		_, err := statement.Exec(id, user[0], user[1], user[2])
+		if err != nil {
+			return err
+		}
+		id++
+	}
+
+	return tx.Commit()
+}
+
+// InitDbLanguages adds the languages to the db
+func InitDbLanguages(db *sql.DB) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	statement, err := tx.Prepare("INSERT INTO language (id, name) VALUES (?, ?)")
+	if err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec("DELETE FROM language"); err != nil {
+		return err
+	}
+
+	id := int64(1)
+	for name, _ := range languageDefs {
+		if _, err := statement.Exec(id, name); err != nil {
+			return err
+		}
+		id++
+	}
+
+	return tx.Commit()
 }

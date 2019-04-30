@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -14,17 +15,19 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-const (
+var (
 	// MaxPings to the db before crashing (is high because the docker db must initialize)
-	MaxPings = 15
+	MaxPings = flag.Int("pings", 15, "The number of times to ping the db before starting")
 	// RecoveryTime to wait between pings or errors returned by the db
-	RecoveryTime = 5 * time.Second
+	RecoveryTime = flag.Int("recovery", 5, "The number of seconds to wait after an wrror")
 	// PollingInterval is the cool down interval for when we run out of submissions to claim
-	PollingInterval = 1 * time.Second
+	PollingInterval = flag.Int("poll", 1, "The number of seconds to wait between pulling submissions")
 	// Version is our current version
-	Version = "1.0"
+	Version = "1.2"
 	// RunnerCount is the number runner workers in use
-	RunnerCount = 5
+	RunnerCount = flag.Int("runners", 5, "The number of goroutines that run code")
+	// NoPullImages on startup
+	NoPullImages = flag.Bool("nopull", false, "Skip pulling language images on startup")
 )
 
 // Load the language config and pull the language images
@@ -41,10 +44,12 @@ func loadLanguages(cli *DockerClient) {
 		os.Exit(127)
 	}
 
-	fmt.Println("Pulling language images")
-	if err := cli.PullAll(); err != nil {
-		fmt.Println("An error occured while pulling language images")
-		os.Exit(127)
+	if !*NoPullImages {
+		fmt.Println("Pulling language images")
+		if err := cli.PullAll(); err != nil {
+			fmt.Println("An error occured while pulling language images")
+			os.Exit(127)
+		}
 	}
 }
 
@@ -61,15 +66,15 @@ func connectDb() *sql.DB {
 		os.Exit(127)
 	}
 
-	fmt.Printf("Attempting to connect to mysql (timeout in %v)\n", MaxPings*RecoveryTime)
+	fmt.Printf("Attempting to connect to mysql (timeout in %v)\n", time.Duration((*MaxPings)*(*RecoveryTime))*time.Second)
 	// Ping the db upto maxPings times before failing
 	for pings := 0; db.Ping() != nil; pings++ {
-		if pings > MaxPings {
-			fmt.Printf("Failed to connect to db after %v attempts\n", MaxPings)
+		if pings > *MaxPings {
+			fmt.Printf("Failed to connect to db after %v attempts\n", *MaxPings)
 			os.Exit(127)
 		}
 
-		time.Sleep(RecoveryTime)
+		time.Sleep(time.Duration(*RecoveryTime) * time.Second)
 	}
 
 	return db
@@ -89,13 +94,13 @@ func claimSubmissions(db *sql.DB, submissionC chan *Submission) {
 		submission, err := ClaimSubmission(db)
 		if err != nil {
 			fmt.Println("Failed to claim a submission:", err)
-			time.Sleep(RecoveryTime)
+			time.Sleep(time.Duration(*RecoveryTime))
 			continue
 		}
 
 		// Sleep if there are no submissions
 		if submission == nil {
-			time.Sleep(PollingInterval)
+			time.Sleep(time.Duration(*PollingInterval))
 			continue
 		}
 
@@ -109,8 +114,14 @@ func runSubmissions(cli *DockerClient, submissions, problems string, submissionC
 		submission := <-submissionC
 		fmt.Println("Running submission", submission.ID)
 
+		if !submission.Type.Valid {
+			fmt.Printf("Type is null for %v (RunnerError)\n", submission.ID)
+			updateStatus(submission, RunnerError)
+			continue
+		}
+
 		strID := fmt.Sprintf("%v", submission.ID)
-		status, err := Test(cli, filepath.Join(submissions, strID), submission.FileName, filepath.Join(problems, submission.Problem))
+		status, err := Test(cli, filepath.Join(submissions, strID), submission.FileName, filepath.Join(problems, submission.Problem), submission.Type.String)
 		if err != nil {
 			fmt.Printf("Error testing submission: %v (%s)\n", submission.ID, err)
 
@@ -124,6 +135,7 @@ func runSubmissions(cli *DockerClient, submissions, problems string, submissionC
 }
 
 func main() {
+	flag.Parse()
 	fmt.Printf("Caustic runner v%s (--COMMIT-HASH-HERE--)\n", Version)
 
 	apiClient, err := client.NewClientWithOpts(client.WithVersion("1.39"))
@@ -141,6 +153,15 @@ func main() {
 	loadLanguages(cli)
 	db := connectDb()
 
+	if err := InitDBUsers(db); err != nil {
+		fmt.Printf("Failed to load users csv: %s\n", err)
+	}
+
+	if err := InitDbLanguages(db); err != nil {
+		fmt.Printf("Failed to add languages to db: %s\n", err)
+		os.Exit(127)
+	}
+
 	submissions, err := filepath.Abs("submissions")
 	if err != nil {
 		fmt.Printf("Error getting submissions path: %s\n", err)
@@ -157,7 +178,7 @@ func main() {
 
 	submissionC := make(chan *Submission)
 
-	for i := 0; i < RunnerCount; i++ {
+	for i := 0; i < *RunnerCount; i++ {
 		go runSubmissions(cli, submissions, problems, submissionC)
 	}
 
