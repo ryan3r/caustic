@@ -23,10 +23,11 @@ public class Submission {
      * @param problem The name of the problem this submission solves
      * @param fileName The name of the submission file in /mnt/submissions
      */
-    public Submission(String _problem, String _fileName, String _submitter) {
+    public Submission(String _problem, String _fileName, String _submitter, String _type) {
         problem = _problem;
         fileName = _fileName;
         submitter = _submitter;
+        type = _type;
         solutionTime = (System.currentTimeMillis() / 60000) - CausticApplication.contestStartTime; // time in minutes
         rejections = 0;
         status = SubmissionStatus.NEW;
@@ -53,6 +54,9 @@ public class Submission {
 
     @NonNull
     int rejections;
+
+    @NonNull
+    String type;
 
     // The status/result of a submission
     public enum SubmissionStatus {

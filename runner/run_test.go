@@ -3,20 +3,11 @@ package main
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/docker/docker/client"
 )
-
-func TestCanDetectFileType(t *testing.T) {
-	name, ft := detectType("foo.java")
-	if name != "foo" {
-		t.Errorf("Expected name to be foo but got %v", name)
-	}
-	if ft != "java" {
-		t.Errorf("Expected file type to be java but got %v", ft)
-	}
-}
 
 var cli *DockerClient
 
@@ -36,7 +27,10 @@ func RunTestCase(t *testing.T, testFile string, expected SubmissionStatus) {
 		loadLanguages(cli)
 	}
 
-	result, err := Test(cli, TestFiles+"/0", testFile, filepath.Join(TestFiles, "/problem"))
+	idx := strings.LastIndex(testFile, ".")
+	ft := testFile[idx+1:]
+
+	result, err := Test(cli, TestFiles+"/0", testFile, filepath.Join(TestFiles, "/problem"), ft)
 	if err != nil {
 		t.Error(err)
 	}

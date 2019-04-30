@@ -5,13 +5,17 @@
 		"run": ["java", "%n"],
 		"artifacts": ["%n.class"]
 	},
-	"cpp": {
+	"c++": {
 		"image": "ryan3r/cpp",
 	    "compile": ["g++", "%f", "-o", "%n"],
 		"run": ["./%n"],
 		"artifacts": ["%n"]
 	},
-	"py": {
+	"python2": {
+		"image": "python:2-alpine",
+		"run": ["python", "%f"]
+	},
+	"python3": {
 		"image": "python:3-alpine",
 		"run": ["python", "%f"]
 	}

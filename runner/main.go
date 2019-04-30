@@ -115,7 +115,7 @@ func runSubmissions(cli *DockerClient, submissions, problems string, submissionC
 		fmt.Println("Running submission", submission.ID)
 
 		strID := fmt.Sprintf("%v", submission.ID)
-		status, err := Test(cli, filepath.Join(submissions, strID), submission.FileName, filepath.Join(problems, submission.Problem))
+		status, err := Test(cli, filepath.Join(submissions, strID), submission.FileName, filepath.Join(problems, submission.Problem), submission.Type)
 		if err != nil {
 			fmt.Printf("Error testing submission: %v (%s)\n", submission.ID, err)
 

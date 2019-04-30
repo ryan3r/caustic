@@ -79,8 +79,8 @@ func expandTemplate(template []string, fileName, name string) []string {
 }
 
 // Compile a file
-func Compile(cli *DockerClient, problemDir, fileName string, logFile *os.File) error {
-	name, ft := detectType(fileName)
+func Compile(cli *DockerClient, problemDir, fileName, ft string, logFile *os.File) error {
+	name, _ := detectType(fileName)
 	def := languageDefs[ft]
 
 	if def == nil {
@@ -119,11 +119,11 @@ type Runner struct {
 	fileName   string
 	container  *Container
 	timeLimit  time.Duration
+	ft         string
 }
 
 // NewRunner creates the container for running tests
-func NewRunner(cli *DockerClient, problemDir, fileName string, timeLimit time.Duration) (*Runner, error) {
-	_, ft := detectType(fileName)
+func NewRunner(cli *DockerClient, problemDir, fileName, ft string, timeLimit time.Duration) (*Runner, error) {
 	def := languageDefs[ft]
 
 	testCtr := &Container{
@@ -148,13 +148,14 @@ func NewRunner(cli *DockerClient, problemDir, fileName string, timeLimit time.Du
 		fileName:   fileName,
 		container:  testCtr,
 		timeLimit:  timeLimit,
+		ft:         ft,
 	}, nil
 }
 
 // Run the submission with the test case
 func (r *Runner) Run(in io.Reader, out io.Writer) error {
-	name, ft := detectType(r.fileName)
-	def := languageDefs[ft]
+	name, _ := detectType(r.fileName)
+	def := languageDefs[r.ft]
 
 	exec := ContainerExec{
 		Container: r.container,
@@ -180,8 +181,8 @@ func (r *Runner) Close() error {
 }
 
 // Test will compile, run and check a program
-func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (SubmissionStatus, error) {
-	defer cleanUpArtifacts(problemDir, fileName)
+func Test(cli *DockerClient, problemDir, fileName, solutionDir, ft string) (SubmissionStatus, error) {
+	defer cleanUpArtifacts(problemDir, fileName, ft)
 
 	logFile, err := os.Create(filepath.Join(problemDir, "log.txt"))
 	if err != nil {
@@ -192,7 +193,7 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 	logFile.Write([]byte("Compile:\n"))
 
 	// Compile the solution
-	err = Compile(cli, problemDir, fileName, logFile)
+	err = Compile(cli, problemDir, fileName, ft, logFile)
 	if err == ErrExitStatusError {
 		logFile.Write([]byte("Status: Compile Error\n"))
 		return CompileError, nil
@@ -213,7 +214,7 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 		logFile.Write([]byte("Failed to open solution definition (using defaults): " + err.Error() + "\n"))
 	}
 
-	runner, err := NewRunner(cli, problemDir, fileName, time.Duration(problemDef.Time)*time.Second)
+	runner, err := NewRunner(cli, problemDir, fileName, ft, time.Duration(problemDef.Time)*time.Second)
 	if err != nil {
 		logFile.Write([]byte("Status: Runner error\nError: Failed to create runner container: " + err.Error() + "\n"))
 		return RunnerError, err
@@ -229,6 +230,7 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 
 		logFile.Write([]byte("Running " + file.Name() + ":\n"))
 
+		// Get the inputs
 		fileIn, err := os.Open(filepath.Join(solutionDir, file.Name()))
 		if err != nil {
 			logFile.Write([]byte("Status: Runner error\nError: Failed to load input file " + file.Name() + ": " + err.Error() + "\n"))
@@ -238,6 +240,7 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 
 		outBuffer := bytes.NewBufferString("")
 
+		// Run the code
 		if err := runner.Run(fileIn, outBuffer); err != nil {
 			if err == ErrExitStatusError {
 				logFile.Write([]byte("Status: Exception\n"))
@@ -273,8 +276,8 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 	return Ok, nil
 }
 
-func cleanUpArtifacts(problemDir, fileName string) {
-	name, ft := detectType(fileName)
+func cleanUpArtifacts(problemDir, fileName, ft string) {
+	name, _ := detectType(fileName)
 	def := languageDefs[ft]
 
 	if def == nil || def.Artifacts == nil {
