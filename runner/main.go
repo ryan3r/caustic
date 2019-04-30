@@ -23,7 +23,7 @@ var (
 	// PollingInterval is the cool down interval for when we run out of submissions to claim
 	PollingInterval = flag.Int("poll", 1, "The number of seconds to wait between pulling submissions")
 	// Version is our current version
-	Version = "1.1"
+	Version = "1.2"
 	// RunnerCount is the number runner workers in use
 	RunnerCount = flag.Int("runners", 5, "The number of goroutines that run code")
 	// NoPullImages on startup
@@ -114,8 +114,14 @@ func runSubmissions(cli *DockerClient, submissions, problems string, submissionC
 		submission := <-submissionC
 		fmt.Println("Running submission", submission.ID)
 
+		if !submission.Type.Valid {
+			fmt.Printf("Type is null for %v (RunnerError)\n", submission.ID)
+			updateStatus(submission, RunnerError)
+			continue
+		}
+
 		strID := fmt.Sprintf("%v", submission.ID)
-		status, err := Test(cli, filepath.Join(submissions, strID), submission.FileName, filepath.Join(problems, submission.Problem), submission.Type)
+		status, err := Test(cli, filepath.Join(submissions, strID), submission.FileName, filepath.Join(problems, submission.Problem), submission.Type.String)
 		if err != nil {
 			fmt.Printf("Error testing submission: %v (%s)\n", submission.ID, err)
 

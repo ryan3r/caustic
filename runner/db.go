@@ -66,7 +66,7 @@ type Submission struct {
 	FileName  string
 	Problem   string
 	Submitter string
-	Type      string
+	Type      sql.NullString
 	db        *sql.DB
 }
 
