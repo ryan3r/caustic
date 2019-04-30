@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -20,6 +22,8 @@ var (
 	ErrExitStatusError = errors.New("Program exited with non-zero exit status")
 	// ErrTimeLimit is for time limit exceeded
 	ErrTimeLimit = errors.New("Program took too long to run")
+	// DefaultTimeLimit is the default time limit for problems
+	DefaultTimeLimit = flag.Int("timelimit", 3, "The time limit to use for problems without a problem.json")
 )
 
 // LanguageDef defines how to handle a file type
@@ -28,6 +32,30 @@ type LanguageDef struct {
 	CompileCommand []string `json:"compile"`
 	RunCommand     []string `json:"run"`
 	Artifacts      []string `json:"artifacts"`
+}
+
+// ProblemDef defines a problem
+type ProblemDef struct {
+	Time   int   `json:"time"`
+	Memory int64 `json:"memory"`
+}
+
+// loadProblem loads a problem from a json file
+func loadProblem(problemDir string) (ProblemDef, error) {
+	problem := ProblemDef{
+		Time: *DefaultTimeLimit,
+	}
+
+	langFile, err := ioutil.ReadFile(filepath.Join(problemDir, "problem.json"))
+	if err != nil {
+		return problem, err
+	}
+
+	if err := json.Unmarshal(langFile, &problem); err != nil {
+		return problem, err
+	}
+
+	return problem, nil
 }
 
 // Detect the filetype and name of file
@@ -180,7 +208,12 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 		return RunnerError, err
 	}
 
-	runner, err := NewRunner(cli, problemDir, fileName, 3*time.Second)
+	problemDef, err := loadProblem(problemDir)
+	if err != nil {
+		logFile.Write([]byte("Failed to open solution definition (using defaults): " + err.Error()))
+	}
+
+	runner, err := NewRunner(cli, problemDir, fileName, time.Duration(problemDef.Time)*time.Second)
 	if err != nil {
 		logFile.Write([]byte("Status: Runner error\nError: Failed to create runner container: " + err.Error()))
 		return RunnerError, err

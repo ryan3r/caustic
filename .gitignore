@@ -4,3 +4,4 @@ runner/github.com
 .DS_Store
 *.jar
 submissions
+log.txt
