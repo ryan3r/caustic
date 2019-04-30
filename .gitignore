@@ -1,4 +1,5 @@
 .idea
+.git/
 *.class
 a.out
 runner/github.com
