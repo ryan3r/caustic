@@ -147,6 +147,10 @@ func main() {
 	loadLanguages(cli)
 	db := connectDb()
 
+	if err := InitDBUsers(db); err != nil {
+		fmt.Printf("Failed to load users csv: %s\n", err)
+	}
+
 	submissions, err := filepath.Abs("submissions")
 	if err != nil {
 		fmt.Printf("Error getting submissions path: %s\n", err)
