@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -11,12 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/ahmetalpbalkan/dlog"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
-	"github.com/docker/docker/client"
 )
 
 var (
@@ -58,7 +51,7 @@ func expandTemplate(template []string, fileName, name string) []string {
 }
 
 // Compile a file
-func Compile(cli *DockerClient, problemDir, fileName string) error {
+func Compile(cli *DockerClient, problemDir, fileName string, logFile *os.File) error {
 	name, ft := detectType(fileName)
 	def := languageDefs[ft]
 
@@ -78,7 +71,7 @@ func Compile(cli *DockerClient, problemDir, fileName string) error {
 		Image:      def.Image,
 		Cmd:        compileCommand,
 		WorkingDir: "/mnt",
-		Out:        os.Stdout,
+		Out:        logFile,
 	}
 
 	if err := compileCtr.BindDir(problemDir, "/mnt", false); err != nil {
@@ -162,22 +155,34 @@ func (r *Runner) Close() error {
 func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (SubmissionStatus, error) {
 	defer cleanUpArtifacts(problemDir, fileName)
 
+	logFile, err := os.Create(filepath.Join(problemDir, "log.txt"))
+	if err != nil {
+		return RunnerError, err
+	}
+	defer logFile.Close()
+
+	logFile.Write([]byte("Compile:\n"))
+
 	// Compile the solution
-	err := Compile(cli, problemDir, fileName)
+	err = Compile(cli, problemDir, fileName, logFile)
 	if err == ErrExitStatusError {
+		logFile.Write([]byte("Status: Compile Error"))
 		return CompileError, nil
 	} else if err != nil {
+		logFile.Write([]byte("Status: Runner error\nError: Failed to run the compiler container: " + err.Error()))
 		return RunnerError, err
 	}
 
 	// Run the submissions
 	tests, err := ioutil.ReadDir(solutionDir)
 	if err != nil {
+		logFile.Write([]byte("Status: Runner error\nError: Failed to open solution directory: " + err.Error()))
 		return RunnerError, err
 	}
 
 	runner, err := NewRunner(cli, problemDir, fileName, 3*time.Second)
 	if err != nil {
+		logFile.Write([]byte("Status: Runner error\nError: Failed to create runner container: " + err.Error()))
 		return RunnerError, err
 	}
 	defer runner.Close()
@@ -189,8 +194,11 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 			continue
 		}
 
+		logFile.Write([]byte("Running " + file.Name() + ":\n"))
+
 		fileIn, err := os.Open(filepath.Join(solutionDir, file.Name()))
 		if err != nil {
+			logFile.Write([]byte("Status: Runner error\nError: Failed to load input file " + file.Name() + ": " + err.Error()))
 			return RunnerError, err
 		}
 		defer fileIn.Close()
@@ -199,10 +207,13 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 
 		if err := runner.Run(fileIn, outBuffer); err != nil {
 			if err == ErrExitStatusError {
+				logFile.Write([]byte("Status: Exception"))
 				return Exception, nil
 			} else if err == ErrTimeLimit {
+				logFile.Write([]byte("Status: Time Limit Exceeded"))
 				return TimeLimit, nil
 			} else {
+				logFile.Write([]byte("Status: Runner error\nError: Failed to run submission:" + err.Error() + "\n"))
 				return RunnerError, err
 			}
 		}
@@ -210,17 +221,22 @@ func Test(cli *DockerClient, problemDir, fileName, solutionDir string) (Submissi
 		// Verify the output of the submission
 		outFile, err := ioutil.ReadFile(filepath.Join(solutionDir, name+".out"))
 		if err != nil {
+			logFile.Write([]byte("Status: Runner error\nError: Failed to load answer " + name + ".out: " + err.Error() + "\n"))
 			return RunnerError, err
 		}
 
 		expectedOut := strings.Trim(string(outFile), "\r\n\t ")
 		solutionOut := strings.Trim(string(outBuffer.String()), "\r\n\t ")
 
+		logFile.Write([]byte(solutionOut + "\n"))
+
 		if expectedOut != solutionOut {
+			logFile.Write([]byte("Status: Wrong Answer"))
 			return Wrong, nil
 		}
 	}
 
+	logFile.Write([]byte("Status: Accepted"))
 	return Ok, nil
 }
 
@@ -237,184 +253,4 @@ func cleanUpArtifacts(problemDir, fileName string) {
 			fmt.Printf("Warn: Failed to clean up artifacts (%v, %v)\n", problemDir, artifact)
 		}
 	}
-}
-
-// DockerClient is a APIClient + Context
-type DockerClient struct {
-	ctx context.Context
-	cli client.APIClient
-}
-
-// Container is an abstraction of a docker container
-type Container struct {
-	Docker         *DockerClient
-	ID             string
-	Image          string
-	Cmd            []string
-	mounts         []mount.Mount
-	ReadOnly       bool
-	WorkingDir     string
-	NetworkEnabled bool
-	Out            io.Writer
-}
-
-// BindDir adds a bind mount to the container
-func (c *Container) BindDir(src string, dest string, readonly bool) (err error) {
-	src, err = filepath.Abs(src)
-
-	c.mounts = append(c.mounts, mount.Mount{
-		Type:     mount.TypeBind,
-		Source:   src,
-		Target:   dest,
-		ReadOnly: readonly,
-	})
-
-	return
-}
-
-// Run creates and starts the container and connects the stdio
-func (c *Container) Run() error {
-	// Create the container
-	res, err := c.Docker.cli.ContainerCreate(c.Docker.ctx, &container.Config{
-		AttachStdout:    true,
-		AttachStderr:    true,
-		Image:           c.Image,
-		WorkingDir:      c.WorkingDir,
-		NetworkDisabled: !c.NetworkEnabled,
-		Cmd:             c.Cmd,
-	}, &container.HostConfig{
-		ReadonlyRootfs: c.ReadOnly,
-		AutoRemove:     true,
-		Mounts:         c.mounts,
-	}, nil, "")
-	if err != nil {
-		return err
-	}
-
-	c.ID = res.ID
-
-	// Start the container
-	err = c.Docker.cli.ContainerStart(c.Docker.ctx, c.ID, types.ContainerStartOptions{})
-	if err != nil {
-		return err
-	}
-
-	// Wire up stdout/stderr
-	reader, err := c.Docker.cli.ContainerLogs(c.Docker.ctx, res.ID, types.ContainerLogsOptions{
-		ShowStdout: true,
-		ShowStderr: true,
-		Follow:     true,
-	})
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		io.Copy(c.Out, dlog.NewReader(reader))
-		reader.Close()
-	}()
-
-	return nil
-}
-
-// Wait for the container to exit
-func (c *Container) Wait() error {
-	doneC, errC := c.Docker.cli.ContainerWait(c.Docker.ctx, c.ID, "")
-	select {
-	case err := <-errC:
-		return err
-	case info := <-doneC:
-		if info.StatusCode != 0 {
-			return ErrExitStatusError
-		}
-	}
-
-	return nil
-}
-
-// Kill a container
-func (c *Container) Kill() error {
-	return c.Docker.cli.ContainerKill(c.Docker.ctx, c.ID, "SIGKILL")
-}
-
-// Stop a container
-func (c *Container) Stop() error {
-	return c.Docker.cli.ContainerStop(c.Docker.ctx, c.ID, nil)
-}
-
-// ContainerExec is a program executed inside a container other than the main program
-type ContainerExec struct {
-	Container   *Container
-	ID          string
-	Cmd         []string
-	In          io.Reader
-	Out         io.Writer
-	ExitC       chan error
-	isTimerKill bool
-}
-
-// StartKillTimer starts a timeout
-func (c *ContainerExec) StartKillTimer(timeout time.Duration) chan bool {
-	exitC := make(chan bool, 1)
-	go func() {
-		timer := time.NewTimer(timeout)
-		select {
-		case <-exitC:
-			timer.Stop()
-		case <-timer.C:
-			c.ExitC <- ErrTimeLimit
-			c.Container.Kill()
-		}
-	}()
-	return exitC
-}
-
-// Run creates the exec, starts it and wires up the stdio
-func (c *ContainerExec) Run() error {
-	// Create exec process
-	docker := c.Container.Docker
-	execID, err := docker.cli.ContainerExecCreate(docker.ctx, c.Container.ID, types.ExecConfig{
-		Cmd:          c.Cmd,
-		AttachStdin:  true,
-		AttachStdout: true,
-		AttachStderr: true,
-	})
-	if err != nil {
-		return err
-	}
-
-	c.ID = execID.ID
-
-	c.ExitC = make(chan error, 1)
-	// Connect stdio
-	conn, err := docker.cli.ContainerExecAttach(docker.ctx, execID.ID, types.ExecStartCheck{})
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		io.Copy(conn.Conn, c.In)
-		conn.CloseWrite()
-	}()
-
-	go func() {
-		io.Copy(c.Out, dlog.NewReader(conn.Reader))
-		conn.Close()
-
-		// Get the exit status (no wait option)
-		info, err := docker.cli.ContainerExecInspect(docker.ctx, execID.ID)
-		if err != nil {
-			c.ExitC <- err
-			return
-		}
-
-		if info.ExitCode != 0 {
-			c.ExitC <- ErrExitStatusError
-			return
-		}
-
-		c.ExitC <- nil
-	}()
-
-	return nil
 }
