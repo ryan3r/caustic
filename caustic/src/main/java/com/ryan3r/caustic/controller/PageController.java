@@ -76,10 +76,11 @@ public class PageController {
         return "login";
     }
 
-    @GetMapping("/formUpload")
-    public String formUpload(@RequestParam(value = "invalid", required = false) boolean invalid, Model model){
+    @GetMapping("/formUpload/{id}")
+    public String formUpload(@PathVariable("id") String id, @RequestParam(value = "invalid", required = false) boolean invalid, Model model){
         model.addAttribute("invalid", invalid);
         model.addAttribute("types", languageRepository.findAll());
+        model.addAttribute("probId", id);
         return "formUpload";
     }
 }
