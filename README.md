@@ -3,7 +3,7 @@
 ## Run the application
 ```
 docker-compose up -d
-./caustic-windows # Replace -window with your os
+./caustic-windows # Replace -windows with your os
 ```
 
 # Better build
