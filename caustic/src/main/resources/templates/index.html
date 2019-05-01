@@ -35,6 +35,10 @@
 </nav>
 <br>
 <h1>Welcome to <span th:text="${appName}"></span></h1>
-<p>This is the home page for our testing/scoring tool for programming contests.</p>
+<ul>
+    <li th:each="problem : ${problems}">
+        <a th:text="${problem.name}" th:attr="href=${problem.uploadUrl}"></a>
+    </li>
+</ul>
 </body>
 </html>

@@ -274,15 +274,13 @@ func InitDbProblems(db *sql.DB, problemDir string) error {
 		return err
 	}
 
-	id := int64(1)
 	for _, dir := range problems {
 		dirPath := filepath.Join(problemDir, dir.Name())
 		problem, _ := loadProblem(dirPath)
 
-		if _, err := statement.Exec(id, problem.Name, "/mnt/problems/"+dir.Name()+"/problem.pdf"); err != nil {
+		if _, err := statement.Exec(dir.Name(), problem.Name, "/mnt/problems/"+dir.Name()+"/problem.pdf"); err != nil {
 			return err
 		}
-		id++
 	}
 
 	return tx.Commit()

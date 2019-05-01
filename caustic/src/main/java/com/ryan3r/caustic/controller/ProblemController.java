@@ -1,6 +1,5 @@
 package com.ryan3r.caustic.controller;
 
-import com.ryan3r.caustic.model.Problem;
 import com.ryan3r.caustic.repository.ProblemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;

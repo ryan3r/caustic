@@ -40,6 +40,7 @@ public class PageController {
     @GetMapping(path="/")
     public String index(Model model){
         model.addAttribute("appName", appName);
+        model.addAttribute("problems", problemRepository.findAll());
         return "index";
     }
 

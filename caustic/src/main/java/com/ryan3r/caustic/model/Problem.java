@@ -1,6 +1,5 @@
 package com.ryan3r.caustic.model;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -71,7 +70,7 @@ public class Problem {
     }
 
     /**
-     * 
+     * Get the content of the submission file
      */
     public byte[] getContent() {
         try {
@@ -79,5 +78,19 @@ public class Problem {
         } catch(IOException e) {
             return new byte[0];
         }
+    }
+
+    /**
+     * Get the url for the pdf
+     */
+    public String getPdfUrl() {
+        return "/pdf/" + id + ".pdf";
+    }
+
+    /**
+     * Get the url for the submission page
+     */
+    public String getUploadUrl() {
+        return "/formUpload/" + id;
     }
 }
