@@ -3,6 +3,7 @@ package com.ryan3r.caustic.controller;
 import com.ryan3r.caustic.model.Submission;
 import com.ryan3r.caustic.model.accounts;
 import com.ryan3r.caustic.repository.LanguageRepository;
+import com.ryan3r.caustic.repository.ProblemRepository;
 import com.ryan3r.caustic.repository.SubmissionRepository;
 import com.ryan3r.caustic.repository.accountsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ public class PageController {
     private SubmissionRepository submissions;
     @Autowired
     private LanguageRepository languageRepository;
+    @Autowired
+    private ProblemRepository problemRepository;
 
     @Autowired
     public PageController(accountsRepository accRep){

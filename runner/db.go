@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 
 	"github.com/docker/docker/api/types"
@@ -243,6 +245,41 @@ func InitDbLanguages(db *sql.DB) error {
 	id := int64(1)
 	for name, _ := range languageDefs {
 		if _, err := statement.Exec(id, name); err != nil {
+			return err
+		}
+		id++
+	}
+
+	return tx.Commit()
+}
+
+// InitDbLanguages adds the languages to the db
+func InitDbProblems(db *sql.DB, problemDir string) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	statement, err := tx.Prepare("INSERT INTO problem (id, name, pdf_path) VALUES (?, ?, ?)")
+	if err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec("DELETE FROM problem"); err != nil {
+		return err
+	}
+
+	problems, err := ioutil.ReadDir(problemDir)
+	if err != nil {
+		return err
+	}
+
+	id := int64(1)
+	for _, dir := range problems {
+		dirPath := filepath.Join(problemDir, dir.Name())
+		problem, _ := loadProblem(dirPath)
+
+		if _, err := statement.Exec(id, problem.Name, "/mnt/problems/"+dir.Name()+"/problem.pdf"); err != nil {
 			return err
 		}
 		id++
