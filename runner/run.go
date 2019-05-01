@@ -36,14 +36,15 @@ type LanguageDef struct {
 
 // ProblemDef defines a problem
 type ProblemDef struct {
-	Time   int   `json:"time"`
-	Memory int64 `json:"memory"`
+	Time int    `json:"time"`
+	Name string `json:"name"`
 }
 
 // loadProblem loads a problem from a json file
 func loadProblem(problemDir string) (ProblemDef, error) {
 	problem := ProblemDef{
 		Time: *DefaultTimeLimit,
+		Name: "Unnamed problem",
 	}
 
 	langFile, err := ioutil.ReadFile(filepath.Join(problemDir, "problem.json"))

@@ -24,7 +24,7 @@ function validate(e) {
                 else
                 {
                     document.cookie = "username=" + usrname + "; expires=" + tomorrow + "; path=/";
-                    window.location.href = "formUpload";
+                    window.location.href = "/";
                 }
             }
         };
@@ -69,7 +69,7 @@ function create(e) {
 	        else
     		{
 	            document.cookie = "username=" + usrname + "; expires=" + tomorrow + "; path=/";
-	            window.location.href = "formUpload";
+	            window.location.href = "/";
         	}
         }
     };
