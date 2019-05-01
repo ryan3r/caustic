@@ -1,5 +1,6 @@
 package com.ryan3r.caustic.controller;
 
+import com.ryan3r.caustic.Team;
 import com.ryan3r.caustic.model.Submission;
 import com.ryan3r.caustic.model.accounts;
 import com.ryan3r.caustic.repository.LanguageRepository;
@@ -15,6 +16,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Controller
@@ -72,7 +77,37 @@ public class PageController {
 
     @GetMapping("/scoreboard")
     public String scoreboard(Model model){
-        model.addAttribute("scores", submissions.findAll());
+        HashMap<String, HashMap<Long, Submission>> subs = new HashMap<>();
+        for(Submission sub : submissions.findAll()) {
+            if(!subs.containsKey(sub.getSubmitter())) {
+                subs.put(sub.getSubmitter(), new HashMap<>());
+            }
+
+            HashMap<Long, Submission> userMap = subs.get(sub.getSubmitter());
+            if(!userMap.containsKey(sub.getSubmissionId()) || sub.getSolutionTime() < userMap.get(sub.getSubmissionId()).getSolutionTime()) {
+                userMap.put(sub.getSubmissionId(), sub);
+            }
+        }
+
+        ArrayList<Team> teams = new ArrayList<Team>();
+        for(String user : subs.keySet()) {
+            HashMap<Long, Submission> userMap = subs.get(user);
+            Team team = new Team(user, 0);
+            teams.add(team);
+
+            for(Long id : userMap.keySet()) {
+                team.setScore(team.getScore() + userMap.get(id).getScore());
+            }
+        }
+
+        Collections.sort(teams);
+
+        int rank = 0;
+        for(Team team : teams) {
+            team.setRank(++rank);
+        }
+
+        model.addAttribute("scores", teams);
         return "scoreboard";
     }
 

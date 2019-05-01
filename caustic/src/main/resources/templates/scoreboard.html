@@ -48,19 +48,15 @@
 <table class="table table-striped table-hover">
     <thead>
         <tr>
-            <th scope="col">Submission ID</th>
+            <th scope="col">Rank</th>
             <th scope="col">Team</th>
-            <th scope="col">Solved?</th>
-            <th scope="col">Time Taken</th>
             <th scope="col">Score</th>
         </tr>
     </thead>
     <tbody>
     <tr th:each="score : ${scores}">
-        <td><em th:text="${score.submissionId}"></em></td>
-        <td th:text="${score.submitter}"></td>
-        <td><img th:attr="src=${score.statusImage}"/></td>
-        <td th:text="${score.timeToSolve}"></td>
+        <td th:text="${score.rank}"></td>
+        <td th:text="${score.name}"></td>
         <td th:text="${score.score}"></td>
     </tr>
     </tbody>
