@@ -37,7 +37,7 @@ public class PageController {
         this.accRep = accRep;
     }
 
-    @GetMapping(path="/")
+    @GetMapping("/")
     public String index(Model model){
         model.addAttribute("appName", appName);
         model.addAttribute("problems", problemRepository.findAll());
@@ -45,11 +45,17 @@ public class PageController {
     }
 
     @GetMapping("/profile")
-    public String profile(@CookieValue("username") String username, Model model) {
+    public String profile(@CookieValue(value="username", required=false) String username, Model model) {
 
-        accounts account = accRep.findUser(username);
-        model.addAttribute("account", account);
-        return "profile";
+        if (username == null){
+            model.addAttribute("error", "1");
+            return "profile";
+        } else {
+            accounts account = accRep.findUser(username);
+            model.addAttribute("account", account);
+            model.addAttribute("error", "0");
+            return "profile";
+        }
     }
 
     @GetMapping("/results/{id}")
@@ -72,18 +78,51 @@ public class PageController {
 
     @GetMapping("/accountSetup")
     public String accountSetup(Model model){
+//        AccountDTO userDto = new AccountDTO();
+//        model.addAttribute("user", userDto);
         return "accountSetup";
     }
+
+//    @PostMapping("/accountSetup")
+//    public ModelAndView registerNewAccount( @ModelAttribute("user") @Valid AccountDTO accountDto,
+//                                            BindingResult result,
+//                                            WebRequest request,
+//                                            Errors errors) {
+//
+//        accounts registered = new accounts();
+//        if (!result.hasErrors()) {
+//            registered = createUserAccount(accountDto, result);
+//        }
+//        if (registered == null) {
+//            result.rejectValue("email", "message.regError");
+//        }
+//        if (result.hasErrors()) {
+//            return new ModelAndView("accountSetup", "user", accountDto);
+//        }
+//        else {
+//            return new ModelAndView("formUpload");
+//        }
+//    }
+//    private accounts createUserAccount(AccountDTO accountDto, BindingResult result) {
+//        accounts registered = null;
+//        try {
+//            registered = AccountService.registerNewUserAccount(accountDto);
+//        } catch (AccountAlreadyExists e) {
+//            return null;
+//        }
+//        return registered;
+//    }
 
     @GetMapping("/login-newaccount")
     public String login(Model model){
         return "login";
     }
 
-    @GetMapping("/formUpload")
-    public String formUpload(@RequestParam(value = "invalid", required = false) boolean invalid, Model model){
+    @GetMapping("/formUpload/{id}")
+    public String formUpload(@PathVariable("id") String id, @RequestParam(value = "invalid", required = false) boolean invalid, Model model){
         model.addAttribute("invalid", invalid);
         model.addAttribute("types", languageRepository.findAll());
+        model.addAttribute("probId", id);
         return "formUpload";
     }
 }

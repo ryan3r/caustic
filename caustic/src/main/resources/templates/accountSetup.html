@@ -10,7 +10,7 @@
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="/">C.A.U.S.T.I.C</a>
-    <!--  Hamburger button for if site is accessed on mobile :)  -->
+    <!--  Hamburger button for smaller screen widths  -->
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
@@ -44,6 +44,26 @@
             <input type="submit" value="Login" id="submit2"/>
         </form>
     </div>
+    <!--  TODO: get this working with the rest of the security implementation
+      <div class="main">
+        <h2>Create Account</h2>
+        <form id="form_id2" method="post" th:object="${user}" name="myform">
+            <label th:text="#{label.user.username}">User Name: </label>
+            <input type="text" name="username" id="username2" th:field="*{username}"/>
+            <label th:text="#{label.user.password}">Password: </label>
+            <input type="password" name="password" id="password2" th:field="*{password}"/>
+            <label th:text="#{label.user.confirmPass}">Verify Password: </label>
+            <input type="password" name="password" id="pswdVerify" th:field="*{matchingPassword}"/>
+            <select id = "actType" th:text="#{label.user.confirmPass}">
+                <option value = "comp">Competitor</option>
+                <option value = "admin">Admin</option>
+            </select>
+
+            <input type="submit" value="Login" id="submit2"/>
+        </form>
+        <a th:href="@{/login-newaccount}" th:text="#{label.form.loginLink}">Login here after submitting.</a>
+    </div>
+      -->
 </div>
 <script src="/home.js"></script>
 </body>

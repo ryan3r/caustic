@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Profile Page</title>
@@ -22,10 +23,6 @@
             padding-bottom: 40px;
         }
 
-        .title {
-            color: grey;
-            font-size: 18px;
-        }
         h1 {
             padding-top: 5px;
         }
@@ -34,7 +31,7 @@
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="/">C.A.U.S.T.I.C</a>
-    <!--  Hamburger button for if site is accessed on mobile :)  -->
+    <!--  Hamburger button for smaller screen widths  -->
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
@@ -49,11 +46,18 @@
     </div>
 </nav>
 <br>
-<div class="hero-unit">
-<div class="card">
-    <img src="/blankProfPic.png" alt="placeholder picture" style="width:100%">
-    <h1><span th:text="${account.username}"></span></h1>
-</div>
+<div th:switch="${error}">
+    <div th:case="1" class="alert alert-danger">
+        <b>
+            You need to <a th:href="@{/login-newaccount}">login</a> to view your profile!
+        </b>
+    </div>
+    <div th:case="0" class="hero-unit">
+    <div class="card">
+        <img src="/blankProfPic.png" alt="placeholder picture" style="width:100%">
+        <h1><span th:text="${account.username}"></span></h1>
+    </div>
+    </div>
 </div>
 </body>
 </html>
