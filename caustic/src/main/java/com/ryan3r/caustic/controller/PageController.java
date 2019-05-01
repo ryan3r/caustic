@@ -68,8 +68,40 @@ public class PageController {
 
     @GetMapping("/accountSetup")
     public String accountSetup(Model model){
+//        AccountDTO userDto = new AccountDTO();
+//        model.addAttribute("user", userDto);
         return "accountSetup";
     }
+
+//    @PostMapping("/accountSetup")
+//    public ModelAndView registerNewAccount( @ModelAttribute("user") @Valid AccountDTO accountDto,
+//                                            BindingResult result,
+//                                            WebRequest request,
+//                                            Errors errors) {
+//
+//        accounts registered = new accounts();
+//        if (!result.hasErrors()) {
+//            registered = createUserAccount(accountDto, result);
+//        }
+//        if (registered == null) {
+//            result.rejectValue("email", "message.regError");
+//        }
+//        if (result.hasErrors()) {
+//            return new ModelAndView("accountSetup", "user", accountDto);
+//        }
+//        else {
+//            return new ModelAndView("formUpload");
+//        }
+//    }
+//    private accounts createUserAccount(AccountDTO accountDto, BindingResult result) {
+//        accounts registered = null;
+//        try {
+//            registered = AccountService.registerNewUserAccount(accountDto);
+//        } catch (AccountAlreadyExists e) {
+//            return null;
+//        }
+//        return registered;
+//    }
 
     @GetMapping("/login-newaccount")
     public String login(Model model){
