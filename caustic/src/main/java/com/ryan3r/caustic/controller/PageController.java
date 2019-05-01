@@ -123,6 +123,7 @@ public class PageController {
         model.addAttribute("invalid", invalid);
         model.addAttribute("types", languageRepository.findAll());
         model.addAttribute("probId", id);
+        model.addAttribute("problemUrl", "/pdf/" + id + ".pdf");
         return "formUpload";
     }
 }

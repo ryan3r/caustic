@@ -81,13 +81,6 @@ public class Problem {
     }
 
     /**
-     * Get the url for the pdf
-     */
-    public String getPdfUrl() {
-        return "/pdf/" + id + ".pdf";
-    }
-
-    /**
      * Get the url for the submission page
      */
     public String getUploadUrl() {

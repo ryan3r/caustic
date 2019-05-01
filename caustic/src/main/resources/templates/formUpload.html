@@ -6,6 +6,7 @@
     </title>
     <meta name="viewport" content="width=device-width"/>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="/formUpload.css"/>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </head>
@@ -26,34 +27,32 @@
         </ul>
     </div>
 </nav>
-<br>
-
 <div class="container" th:if="${invalid}">
     <div class="alert alert-danger">
         The problem you entered does not exist or you forgot to add a file
     </div>
 </div>
-<div style="text-align: center;">
-    <h1>
-        File Upload
-    </h1>
-    <form id="uploadFile" action="/submit" method="post" enctype="multipart/form-data">
-        <fieldset>
-            <p>
-                <label for="upload">File to Upload</label>
-                <input id="upload" name="upload" type = "file" /><br/>
-                <select name="type">
-                    <option th:each="type : ${types}" th:text="${type}"></option>
-                </select><br/><br/>
-                <input type="number" name="problemId" placeholder="Problem id"/>
-            </p>
-            <p>
-                <input type="submit" id="submit" name="submit" value="Submit"/>
-            </p>
-
-        </fieldset>
-    </form>
-    <iframe id="PDF" th:attr='src="/pdf/${probID}.pdf"' style="width:600px; height:500px;" frameborder="0"></iframe>
+<div class="upload-outer">
+    <iframe class="upload-segment" id="PDF" th:attr="src=${problemUrl}" frameborder="0"></iframe>
+    <div class="upload-upload">
+        <h2>Problem submission</h2>
+        <form id="uploadFile" action="/submit" method="post" enctype="multipart/form-data">
+            <fieldset>
+                <input type="hidden" name="problemId" th:attr="value=${probId}"/>
+                <p>
+                    <select name="type">
+                        <option th:each="type : ${types}" th:text="${type}"></option>
+                    </select>
+                </p>
+                <p>
+                    <input id="upload" name="upload" type = "file"/>
+                </p>
+                <p>
+                    <button type="submit">Submit</button>
+                </p>
+            </fieldset>
+        </form>
+    </div>
 </div>
 </body>
 </html>
