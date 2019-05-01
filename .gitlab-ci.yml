@@ -52,9 +52,9 @@ RunnerBuild:
     - pushd /go/src/runner
     - sed -i "s/--COMMIT-HASH-HERE--/${CI_COMMIT_SHA:0:8}/" main.go
     - go build *.go
-    - mv db caustic-linux
+    - mv container caustic-linux
     - GOOS=darwin go build *.go
-    - mv db caustic-macos
+    - mv container caustic-macos
     - GOOS=windows go build *.go
     - mv container.exe caustic-windows.exe
     - popd
