@@ -26,6 +26,44 @@
         h1 {
             padding-top: 5px;
         }
+
+        .alert{
+            text-align: center;
+        }
+
+        form{
+            text-align: center;
+        }
+
+        .inputfile{
+            padding-left: 125px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /*.inputfile {*/
+        /*    width: 0.1px;*/
+        /*    height: 0.1px;*/
+        /*    opacity: 0;*/
+        /*    overflow: hidden;*/
+        /*    position: absolute;*/
+        /*    z-index: -1;*/
+        /*}*/
+        /*label + .inputfile {*/
+        /*    font-size: 1.25em;*/
+        /*    font-weight: 700;*/
+        /*    color: white;*/
+        /*    background-color: black;*/
+        /*    display: inline-block;*/
+        /*    cursor: pointer;*/
+        /*}*/
+        /*label + .inputfile:focus,*/
+        /*.inputfile + label:hover {*/
+        /*    background-color: red;*/
+        /*    outline: 1px dotted #000;*/
+        /*    outline: -webkit-focus-ring-color auto 5px;*/
+        /*}*/
+
     </style>
 </head>
 <body>
@@ -52,11 +90,19 @@
             You need to <a th:href="@{/login-newaccount}">login</a> to view your profile!
         </b>
     </div>
-    <div th:case="0" class="hero-unit">
-    <div class="card">
-        <img src="/blankProfPic.png" alt="placeholder picture" style="width:100%">
-        <h1><span th:text="${account.username}"></span></h1>
-    </div>
+    <div th:case="0">
+        <div class="hero-unit">
+            <div class="card">
+                <img src="/blankProfPic.png" alt="placeholder picture" style="width:100%">
+                <h1><span th:text="${account.username}"></span></h1>
+            </div>
+        </div>
+        <br>
+        <form id="uploadFile" action="/add_profile_picture" method="post" enctype="multipart/form-data">
+            <label for="profPic"><b>Upload a team profile picture!</b></label><br>
+            <input class="inputfile" type="file" name="profPic" id="profPic"/><br><br>
+            <input type="submit" class="button btn-primary" value="Upload"/>
+        </form>
     </div>
 </div>
 </body>

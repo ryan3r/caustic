@@ -3,10 +3,14 @@ package com.ryan3r.caustic.controller;
 import com.ryan3r.caustic.repository.accountsRepository;
 import com.ryan3r.caustic.model.accounts;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.view.RedirectView;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Paths;
 
 @RestController
 public class accountsController 
@@ -28,5 +32,34 @@ public class accountsController
 	{
 		accounts acc = a.findUser(account.getUsername());
 		return acc != null && acc.getPassword().equals(account.getPassword());
+	}
+
+	@PostMapping("/add_profile_picture")
+	public RedirectView addProfPic(@RequestParam("upload") MultipartFile file,
+								   @CookieValue("username") String usr) throws IOException{
+
+//		// No such problem
+//		if(problemId.length() == 0 || !Paths.get("/mnt/problems", problemId).toFile().exists() || file.isEmpty()) {
+//			return new RedirectView("/formUpload?invalid=true");
+//		}
+//
+//		Submission submission = new Submission(problemId, file.getOriginalFilename(), username, type);
+//		submission = submissions.save(submission);
+//		String id = "" + submission.getSubmissionId();
+//
+//		File f = Paths.get("/mnt/submissions/", id).toFile();
+//		if(!f.exists())
+//		{
+//			f.mkdirs();
+//		}
+//
+//		File fNew = submission.getFile();
+//		fNew.createNewFile();
+//		FileOutputStream fout = new FileOutputStream(fNew);
+//		fout.write(file.getBytes());
+//		fout.close();
+//
+//		return new RedirectView("/results/" + submission.getSubmissionId());
+		return new RedirectView("/profile");
 	}
 }
