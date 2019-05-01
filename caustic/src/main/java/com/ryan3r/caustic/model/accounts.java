@@ -1,5 +1,9 @@
 package com.ryan3r.caustic.model;
-import javax.persistence.*;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 
 @Entity
 public class accounts {
@@ -9,6 +13,7 @@ public class accounts {
 	private String username;
 	private String password;
 	private String accType;
+	private String pathToProfPic;
 
 	public accounts() {}
 	
@@ -40,6 +45,10 @@ public class accounts {
 	{
 		this.accType = accType;
 	}
+
+	public void setPathToProfPic(String pathToProfPic){
+		this.pathToProfPic = pathToProfPic;
+	}
 	
 	public String getUsername()
 	{
@@ -54,5 +63,9 @@ public class accounts {
 	public String getAccType()
 	{
 		return this.accType;
+	}
+
+	public String getPathToProfPic(){
+		return this.pathToProfPic;
 	}
 }
