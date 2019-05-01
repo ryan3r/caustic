@@ -34,18 +34,24 @@ public class PageController {
         this.accRep = accRep;
     }
 
-    @GetMapping(path="/")
+    @GetMapping("/")
     public String index(Model model){
         model.addAttribute("appName", appName);
         return "index";
     }
 
     @GetMapping("/profile")
-    public String profile(@CookieValue("username") String username, Model model) {
+    public String profile(@CookieValue(value="username", required=false) String username, Model model) {
 
-        accounts account = accRep.findUser(username);
-        model.addAttribute("account", account);
-        return "profile";
+        if (username == null){
+            model.addAttribute("error", "1");
+            return "profile";
+        } else {
+            accounts account = accRep.findUser(username);
+            model.addAttribute("account", account);
+            model.addAttribute("error", "0");
+            return "profile";
+        }
     }
 
     @GetMapping("/results/{id}")

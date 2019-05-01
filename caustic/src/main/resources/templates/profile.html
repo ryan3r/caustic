@@ -46,11 +46,18 @@
     </div>
 </nav>
 <br>
-<div class="hero-unit">
-<div class="card">
-    <img src="/blankProfPic.png" alt="placeholder picture" style="width:100%">
-    <h1><span th:text="${account.username}"></span></h1>
-</div>
+<div th:switch="${error}">
+    <div th:case="1" class="alert alert-danger">
+        <b>
+            You need to <a th:href="@{/login-newaccount}">login</a> to view your profile!
+        </b>
+    </div>
+    <div th:case="0" class="hero-unit">
+    <div class="card">
+        <img src="/blankProfPic.png" alt="placeholder picture" style="width:100%">
+        <h1><span th:text="${account.username}"></span></h1>
+    </div>
+    </div>
 </div>
 </body>
 </html>
