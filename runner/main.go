@@ -173,6 +173,11 @@ func main() {
 		os.Exit(127)
 	}
 
+	if err := InitDbProblems(db, problems); err != nil {
+		fmt.Printf("Failed to add problems to db: %s\n", err)
+		os.Exit(127)
+	}
+
 	// Start testing submissions
 	fmt.Println("Connected\nWaiting for submissions")
 

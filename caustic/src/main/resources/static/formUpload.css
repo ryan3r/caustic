@@ -1,0 +1,16 @@
+html, body {
+    height: 100%;
+}
+
+.upload-outer {
+    display: flex;
+    height: calc(100% - 56px);
+}
+
+.upload-segment {
+    flex-grow: 1;
+}
+
+.upload-upload {
+    padding: 5px;
+}
